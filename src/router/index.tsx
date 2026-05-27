@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Spin } from 'antd'
-import MainLayout from '../layouts/MainLayout'
+import MainLayout from '@/layouts/MainLayout'
 import { publicRoutes, privateRoutes } from './routes'
 import PrivateRoute from './PrivateRoute'
-import useUserStore from '../store/useUserStore'
+import useUserStore from '@/store/useUserStore'
 
 function Loading() {
   return (
