@@ -6,14 +6,16 @@ export function useAuth() {
   const navigate = useNavigate()
   const { user, isAuthenticated, login, register, logout } = useUserStore()
 
-  const handleLogin = useCallback(async (username: string, password: string) => {
-    await login({ username, password })
+  const handleLogin = useCallback(async (email: string, password: string) => {
+    await login({ email, password })
     navigate('/', { replace: true })
   }, [login, navigate])
 
   const handleRegister = useCallback(async (username: string, email: string, password: string) => {
-    await register({ username, email, password })
+    await register({ username, email, password, code: '' })
   }, [register])
+
+
 
   const handleLogout = useCallback(() => {
     logout()

@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { Form, Input, Button, Checkbox, Card, Tabs, Modal } from 'antd'
-import {  CheckCircleOutlined } from '@ant-design/icons'
+import { CheckCircleOutlined } from '@ant-design/icons'
 import { useAuth } from '@/hooks/useAuth'
 import gitlabIcon from '@/assets/icons/gitlab.svg'
 import dingtalkIcon from '@/assets/icons/dingtalk.svg'
 import weixinIcon from '@/assets/icons/weixin.svg'
-
 function generateCaptchaText() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz0123456789'
   let result = ''
