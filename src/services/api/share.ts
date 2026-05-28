@@ -1,5 +1,5 @@
 import request from '../request'
-import type { ShareData, Document } from '../../types'
+import type { ShareData, MyDocument } from '../../types'
 
 export const shareAPI = {
   share: (id: number, data: ShareData) =>
@@ -9,8 +9,8 @@ export const shareAPI = {
     request.delete(`/documents/${id}/share/${userId}`),
 
   sharedList: () =>
-    request.get<Document[]>('/documents/shared'),
+    request.get<MyDocument[]>('/documents/shared'),
 
   getSharedByToken: (token: string) =>
-    request.get<Document & { permission: string }>(`/share/${token}`),
+    request.get<MyDocument & { permission: string }>(`/share/${token}`),
 }

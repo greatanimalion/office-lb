@@ -1,28 +1,28 @@
 import { create } from 'zustand'
-import type { Document } from '../types'
+import type { MyDocument } from '../types'
 import { fileAPI } from '../services/api/file'
 
 interface FileState {
-  documents: Document[]
-  currentDocument: Document | null
+  myDocuments: MyDocument[]
+  currentDocument: MyDocument | null
   loading: boolean
-  fetchDocuments: (params?: { folder?: string; search?: string }) => Promise<void>
-  setCurrentDocument: (doc: Document | null) => void
+  fetchMyDocuments: (params?: { folder?: string; search?: string }) => Promise<void>
+  setCurrentDocument: (doc: MyDocument | null) => void
   createDocument: (data: FormData) => Promise<{ id: number; title: string } | null>
   updateDocument: (id: number, title: string) => Promise<boolean>
   deleteDocument: (id: number) => Promise<boolean>
 }
 
 const useFileStore = create<FileState>((set, get) => ({
-  documents: [],
+  myDocuments: [],
   currentDocument: null,
   loading: false,
 
-  fetchDocuments: async (params) => {
+  fetchMyDocuments: async (params) => {
     set({ loading: true })
     try {
       const response = await fileAPI.list(params)
-      set({ documents: response.data })
+      set({ myDocuments: response.data })
     } finally {
       set({ loading: false })
     }
@@ -35,7 +35,7 @@ const useFileStore = create<FileState>((set, get) => ({
   createDocument: async (data: FormData) => {
     try {
       const response = await fileAPI.create(data)
-      await get().fetchDocuments()
+      await get().fetchMyDocuments()
       return response.data
     } catch {
       return null
@@ -45,7 +45,7 @@ const useFileStore = create<FileState>((set, get) => ({
   updateDocument: async (id: number, title: string) => {
     try {
       await fileAPI.update(id, { title })
-      await get().fetchDocuments()
+      await get().fetchMyDocuments()
       return true
     } catch {
       return false
@@ -55,7 +55,7 @@ const useFileStore = create<FileState>((set, get) => ({
   deleteDocument: async (id: number) => {
     try {
       await fileAPI.delete(id)
-      await get().fetchDocuments()
+      await get().fetchMyDocuments()
       return true
     } catch {
       return false

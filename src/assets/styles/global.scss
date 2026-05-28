@@ -59,3 +59,15 @@
     box-sizing: border-box;
   }
 }
+
+.scrollbar::-webkit-scrollbar {
+  width: 8px;
+  
+}
+.scrollbar::-webkit-scrollbar-track {
+  background-color: var(--code-bg);
+}
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 4px;
+}

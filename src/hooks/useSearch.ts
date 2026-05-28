@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
 import { searchAPI } from '../services/api/search'
-import type { Document } from '../types'
+import type { MyDocument } from '../types'
 
 export function useSearch() {
-  const [results, setResults] = useState<Document[]>([])
+  const [results, setResults] = useState<MyDocument[]>([])
   const [searching, setSearching] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
 

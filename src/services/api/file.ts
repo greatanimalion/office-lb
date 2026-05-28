@@ -1,13 +1,13 @@
 import type { AxiosProgressEvent } from 'axios'
 import request from '../request'
-import type { Document } from '../../types'
+import type { MyDocument } from '../../types'
 
 export const fileAPI = {
   list: (params?: { folder?: string; search?: string }) =>
-    request.get<Document[]>('/documents', { params }),
+    request.get<MyDocument[]>('/documents', { params }),
 
   get: (id: number) =>
-    request.get<Document>(`/documents/${id}`),
+    request.get<MyDocument>(`/documents/${id}`),
 
   create: (data: FormData) =>
     request.post<{ id: number; title: string }>('/documents', data, {
