@@ -10,6 +10,8 @@ import {
 } from '@ant-design/icons'
 import useFileStore from '@/store/useFileStore'
 import type { MyDocument } from '@/types'
+import { useFileUpload } from '@/hooks/useFileUpload'
+import { useNavigate } from 'react-router-dom'
 
 const { Search } = Input
 
@@ -30,57 +32,36 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 function FileManager() {
-  const { myDocuments, loading, fetchMyDocuments, deleteDocument, createDocument,updateDocument } = useFileStore()
+  const navigate = useNavigate()
+  const { ODocuments, loading, fetchODocuments, deleteDocument } = useFileStore()
   const [searchText, setSearchText] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const docList = Array.isArray(myDocuments) ? myDocuments : []
+  const {upload,uploading,progress} = useFileUpload()
+
+  const docList = Array.isArray(ODocuments) ? ODocuments : []
   useEffect(() => {
-    fetchMyDocuments()
-  }, [fetchMyDocuments])
+    fetchODocuments()
+  }, [fetchODocuments])
 
   const handleSearch = (value: string) => {
     setSearchText(value)
-    fetchMyDocuments({ search: value })
+    fetchODocuments({ page: 1, pageSize: 10 })
   }
-
   const handleUpload = async (file: any) => {
-    setUploading(true)
-    setUploadProgress(0)
-
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
-      const result = await createDocument(formData)
+      const result = await upload(file)
       if (result) {
-        message.success(`文件 "${result.title}" 上传成功`)
+        message.success(`文件 "${result.filename}" 上传成功`)
       } else {
         message.error('文件上传失败')
       }
     } catch (error) {
       message.error('文件上传失败')
     } finally {
-      setUploading(false)
-      setUploadProgress(100)
-      setTimeout(() => setUploadProgress(0), 1000)
     }
-
     return false
   }
-
   const handleDelete = async (id: number, title: string) => {
     const success = await deleteDocument(id)
     if (success) {
@@ -96,28 +77,17 @@ function FileManager() {
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
-      render: (text: string) => {
-        const ext = text.split('.').pop() || ''
-        return (
-          <div className="flex items-center gap-3">
-            {getFileIcon(ext)}
-            <span>{text}</span>
-          </div>
-        )
-      },
+   
     },
     {
       title: '大小',
       dataIndex: 'fileSize',
-      key: 'fileSize',
-      width: 100,
-      render: (text: number) => formatFileSize(text || 0),
+      key: 'fileSize'
     },
     {
       title: '类型',
       dataIndex: 'title',
       key: 'type',
-      width: 100,
       render: (text: string) => {
         const ext = text.split('.').pop()?.toUpperCase() || '未知'
         return <Tag color="gray">{ext}</Tag>
@@ -125,25 +95,21 @@ function FileManager() {
     },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
+      dataIndex: 'created_at',
       key: 'createdAt',
-      width: 180,
-      render: (text: string) => formatDate(text),
     },
     {
       title: '更新时间',
-      dataIndex: 'updatedAt',
+      dataIndex: 'updated_at',
       key: 'updatedAt',
-      width: 180,
-      render: (text: string) => formatDate(text),
     },
     {
       title: '操作',
       key: 'action',
-      width: 180,
+      width: 320,
       render: (_: unknown, record: MyDocument) => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />}>预览</Button>
+          <Button type="text" icon={<EyeOutlined />} onClick={() => { navigate(`/documents/${record.id}/preview`); }}> 查看</Button>
           <Button type="text" icon={<EditOutlined />}>编辑</Button>
           <Popconfirm
             title={`确定删除文件 "${record.title}" 吗？`}
@@ -190,11 +156,11 @@ function FileManager() {
       </div>
 
       {/* 上传进度条 */}
-      {uploadProgress > 0 && (
+      {progress > 0 && (
         <div className="mb-4">
           <Progress
-            percent={uploadProgress}
-            status={uploadProgress === 100 ? 'success' : 'active'}
+            percent={progress}
+            status={progress === 100 ? 'success' : 'active'}
             strokeColor={{
               '0%': '#10b981',
               '100%': '#3b82f6',
@@ -228,7 +194,7 @@ function FileManager() {
       </div>
 
       {/* 文档列表 */}
-      <div className="bg-white rounded-lg shadow p-6">
+    
         <Table
           columns={columns}
           dataSource={docList}
@@ -243,7 +209,7 @@ function FileManager() {
           bordered={false}
           className="w-full"
         />
-      </div>
+
     </div>
   )
 }

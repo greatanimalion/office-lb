@@ -3,10 +3,10 @@ import type { MyDocument } from '../types'
 import { fileAPI } from '../services/api/file'
 
 interface FileState {
-  myDocuments: MyDocument[]
+  ODocuments: MyDocument[]
   currentDocument: MyDocument | null
   loading: boolean
-  fetchMyDocuments: (params?: { folder?: string; search?: string }) => Promise<void>
+  fetchODocuments: (params?: { page: number; pageSize: number }) => Promise<void>
   setCurrentDocument: (doc: MyDocument | null) => void
   createDocument: (data: FormData) => Promise<{ id: number; title: string } | null>
   updateDocument: (id: number, title: string) => Promise<boolean>
@@ -14,15 +14,15 @@ interface FileState {
 }
 
 const useFileStore = create<FileState>((set, get) => ({
-  myDocuments: [],
+  ODocuments: [],
   currentDocument: null,
   loading: false,
 
-  fetchMyDocuments: async (params) => {
+  fetchODocuments: async (params: { page: number; pageSize: number }={page:1,pageSize:10}) => {
     set({ loading: true })
     try {
       const response = await fileAPI.list(params)
-      set({ myDocuments: response.data })
+      set({ ODocuments: response.data })
     } finally {
       set({ loading: false })
     }
@@ -35,7 +35,7 @@ const useFileStore = create<FileState>((set, get) => ({
   createDocument: async (data: FormData) => {
     try {
       const response = await fileAPI.create(data)
-      await get().fetchMyDocuments()
+      await get().fetchODocuments()
       return response.data
     } catch {
       return null
@@ -45,7 +45,7 @@ const useFileStore = create<FileState>((set, get) => ({
   updateDocument: async (id: number, title: string) => {
     try {
       await fileAPI.update(id, { title })
-      await get().fetchMyDocuments()
+      await get().fetchODocuments()
       return true
     } catch {
       return false
@@ -55,7 +55,7 @@ const useFileStore = create<FileState>((set, get) => ({
   deleteDocument: async (id: number) => {
     try {
       await fileAPI.delete(id)
-      await get().fetchMyDocuments()
+      await get().fetchODocuments()
       return true
     } catch {
       return false
