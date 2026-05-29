@@ -9,7 +9,7 @@ import {DocumentEditor} from "@onlyoffice/document-editor-react"
 function DocumentPreview() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [documentConfig, setDocumentConfig] = useState<Object | null>(null)
+  const [documentConfig, setDocumentConfig] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   useEffect(() => {
     if (!id) return
@@ -35,7 +35,11 @@ function DocumentPreview() {
             <Spin size="large" />
           </div>
         )}
-        {documentConfig && (<DocumentEditor id={new Date().getTime().toString()} documentServerUrl={documentConfig.documentServerUrl} config={documentConfig} />)}
+        {documentConfig && (
+          <DocumentEditor id={new Date().getTime().toString()}
+           documentServerUrl={documentConfig.documentServerUrl} 
+           config={documentConfig} 
+           />)}
       </div>
     </div>
   )

@@ -3,7 +3,6 @@ import { lazy } from 'react'
 const Login = lazy(() => import('../pages/Login'))
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const FileManager = lazy(() => import('../pages/FileManager'))
-const DocumentEdit = lazy(() => import('../pages/DocumentEdit'))
 const DocumentPreview = lazy(() => import('../pages/DocumentPreview'))
 const ShareLink = lazy(() => import('../pages/ShareLink'))
 const AuditLog = lazy(() => import('../pages/AuditLog'))
@@ -27,7 +26,6 @@ export const publicRoutes: RouteConfig[] = [
 export const privateRoutes: RouteConfig[] = [
   { path: '/', element: <Dashboard />, isIndex: true },
   { path: '/files', element: <FileManager /> },
-  { path: '/documents/:id/edit', element: <DocumentEdit /> },
   { path: '/documents/:id/preview', element: <DocumentPreview /> },
   { path: '/audit-log', element: <AuditLog /> },
   { path: '/permissions', element: <PermissionManage /> },
