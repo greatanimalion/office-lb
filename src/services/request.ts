@@ -1,3 +1,4 @@
+import { message } from 'antd'
 import axios from 'axios'
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 
@@ -14,15 +15,23 @@ request.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 
+function getErrorMessage(code:number){
+  switch(code){
+    case 401:return "暂无权限";
+    case 502:return "网络错误";
+    default:"未知错误:"+code;
+  }
+}
 request.interceptors.response.use(
   (response) => response,
-  (error: { response?: { status: number } }) => {
+  (error: { response?: { status: number },status:number }) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
     }
-    return Promise.reject(error)
+    message.error(getErrorMessage(error.status))
+    return error
   },
 )
 

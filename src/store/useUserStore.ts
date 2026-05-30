@@ -20,7 +20,7 @@ const useUserStore = create<UserState>((set) => ({
 
   login: async (data: LoginData) => {
     const response = await authAPI.login(data)
-    const { token, user } = response.data
+    const { token='1', user='1' } = response.data||{}
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
     set({ token, user: user as User, isAuthenticated: true })

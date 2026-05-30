@@ -17,9 +17,9 @@ import {
   LayoutOutlined,
   DatabaseOutlined,
   BarChartOutlined,
-  LeftCircleOutlined,
   UpCircleOutlined,
-  FileSearchOutlined
+  FileSearchOutlined,
+  WarningOutlined
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import useUserStore from '../store/useUserStore'
@@ -109,10 +109,10 @@ function MainLayout() {
     },
     {
       key: 'monitor',
-      icon: <LeftCircleOutlined />,
+      icon: <WarningOutlined />,
       label: '异常页面',
       children: [
-        { key: '/exception-page', icon: <LeftCircleOutlined />, label: '异常页面', onClick: () => navigate('/exception-page') },
+        { key: '/exception-page', icon: <WarningOutlined />, label: '异常页面', onClick: () => navigate('/exception-page') },
       ],
     },
     {
