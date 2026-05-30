@@ -1,4 +1,4 @@
-import { Layout, Menu, Button, Avatar, Input, Dropdown, Badge } from 'antd'
+import { Layout, Menu, Button, Avatar, Input, Dropdown, Badge, theme as antdTheme, ConfigProvider, } from 'antd'
 import {
   FileTextOutlined,
   ShareAltOutlined,
@@ -19,13 +19,17 @@ import {
   BarChartOutlined,
   UpCircleOutlined,
   FileSearchOutlined,
-  WarningOutlined
+  WarningOutlined,
+  BgColorsOutlined,
+  SunOutlined,
+  MoonOutlined,
+  SyncOutlined
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import useUserStore from '../store/useUserStore'
 import useGlobalStore from '../store/useGlobalStore'
 import logo from '@/assets/images/office.png'
-
+import { useTheme } from '@/hooks/useTheme'
 const { Header, Content, Sider } = Layout
 const { Search } = Input
 
@@ -46,7 +50,12 @@ function MainLayout() {
   const location = useLocation()
   const { user, logout } = useUserStore()
   const { sidebarCollapsed, toggleSidebar } = useGlobalStore()
-
+  const { mode, effectiveTheme, changeMode } = useTheme();
+  const getAlgorithm = () => {
+    return effectiveTheme === 'dark'
+      ? antdTheme.darkAlgorithm
+      : antdTheme.defaultAlgorithm;
+  };
   const handleLogout = () => {
     logout()
     navigate('/login')
@@ -58,7 +67,12 @@ function MainLayout() {
     { type: 'divider' as const },
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
   ]
-
+  const themeMenuItems = [
+    { key: 'light',onClick:()=>changeMode('light'), icon: <SunOutlined />, label: '浅色主题', extra: <div  className={`w-1 h-1 rounded-2xl ${mode=='light'?'bg-blue-600':''}`}></div> },
+    { key: 'dark',onClick:()=>changeMode('dark'), icon: <MoonOutlined />, label: '暗色主题', extra: <div className={`w-1 h-1 rounded-2xl ${mode=='dark'?'bg-blue-600':''}`}></div> },
+    { type: 'divider' as const },
+    { key: 'auto',onClick:()=>changeMode('system'), icon: <SyncOutlined />, label: '跟随系统', extra:<div className={`w-1 h-1 rounded-2xl ${mode=='system'?'bg-blue-600':''}`}></div> },
+  ]
   const menuItems = [
     {
       key: '/',
@@ -128,40 +142,29 @@ function MainLayout() {
   ]
 
   return (
-    <Layout style={{ height: '100vh', overflow: 'hidden', background: 'white' }}>
-      <Sider
-        width={200}
-        theme="light"
-        collapsible
-        collapsed={sidebarCollapsed}
-        onCollapse={toggleSidebar}
-        style={{ overflow: 'auto' }}
-        className='scrollbar'
-      >
-        <div className="flex items-center justify-center h-16">
-          <img src={logo} alt="logo" className="w-8 h-8 mr-2" />
-          {!sidebarCollapsed && <span className="text-lg font-bold">OnlyOffice</span>}
-        </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          theme="light"
-          defaultOpenKeys={['documents', 'system', 'admin']}
-          items={menuItems}
-        />
-      </Sider>
-
-      <Layout style={{ overflow: 'auto' }}>
+    <ConfigProvider
+      theme={{
+        algorithm: getAlgorithm(),
+        components: {
+        Layout: {
+          headerBg: effectiveTheme=="dark" ? '#141414' : '#ffffff', // 暗色模式常用背景色，亮色模式白色
+        },
+      },
+      }}
+    >
+      <Layout style={{ height: '100vh', overflow: 'hidden'}} >
         <Header
-          className="bg-white! border-bottom border-gray-200 px-6 flex items-center justify-between"
-          style={{ padding: '0 24px', height: 64, lineHeight: '64px' }}
-        >
+          className="flex items-center justify-between h-16 p-4!"
+         >
+          <div className="flex items-center justify-center h-16">
+            <img src={logo} alt="logo" className="w-8 h-8 mr-2" />
+            <span className="text-lg font-bold">OnlyOffice</span>
+          </div>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 text-gray-600">
-              <span className="text-gray-800 font-medium text-lg">{getGreeting()}</span>
+            <div className="flex items-center gap-2  ">
+              <span className="  font-medium text-lg">{getGreeting()}</span>
             </div>
           </div>
-
           <div className="flex items-center gap-4">
             <Search
               placeholder="搜索..."
@@ -170,18 +173,18 @@ function MainLayout() {
               style={{ width: 280 }}
               size="middle"
             />
-
-            <Button type="text" icon={<MailOutlined />}>
-              <Badge count={3} />
-            </Button>
-
-            <Button type="text" icon={<MessageOutlined />}>
-              <Badge count={5} />
-            </Button>
-            <Button type="text" icon={<BellOutlined />}>
-              <Badge count={2} />
-            </Button>
-            <Button type="text" icon={<SettingOutlined />} />
+            <Badge offset={[-5, 5]} size="small" count={3}>
+              <Button type='text' icon={<MailOutlined />}></Button>
+            </Badge>
+            <Badge offset={[-5, 5]} size="small" count={3}>
+              <Button type='text' icon={<MessageOutlined />}></Button>
+            </Badge>
+            <Badge offset={[-5, 5]} size="small" count={3}>
+              <Button type='text' icon={<BellOutlined />}></Button>
+            </Badge>
+            <Dropdown menu={{ items: themeMenuItems }} placement='bottom'>
+              <Button type="text" icon={<BgColorsOutlined />} />
+            </Dropdown>
             <Dropdown menu={{ items: userMenuItems }} trigger={['hover', 'click']}>
               <div className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg transition-colors">
                 <Avatar size={32} icon={<UserOutlined />} className="bg-blue-500" />
@@ -190,12 +193,30 @@ function MainLayout() {
             </Dropdown>
           </div>
         </Header>
-
-        <Content className="p-6">
-          <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
+        <Layout>
+          <Sider
+            width={200}
+            theme="light"
+            collapsible
+            collapsed={sidebarCollapsed}
+            onCollapse={toggleSidebar}
+            style={{ overflow: 'auto' }}
+            className='scrollbar'
+          >
+            <Menu
+              mode="inline"
+              selectedKeys={[location.pathname]}
+              theme="light"
+              defaultOpenKeys={['documents', 'system', 'admin']}
+              items={menuItems}
+            />
+          </Sider>
+          <Content className="p-6">
+            <Outlet />
+          </Content>
+        </Layout>
+      </Layout >
+    </ConfigProvider>
   )
 }
 
