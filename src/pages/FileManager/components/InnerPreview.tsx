@@ -6,7 +6,7 @@ import { fileAPI } from '@/services/api/file'
 import {DocumentEditor} from "@onlyoffice/document-editor-react"
 
 
-function DocumentPreview() {
+function InnerPreview() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [documentConfig, setDocumentConfig] = useState<any>(null)
@@ -47,4 +47,4 @@ function DocumentPreview() {
   )
 }
 
-export default DocumentPreview
+export default InnerPreview

@@ -1,7 +1,6 @@
 
 import request from '../request'
-import type { MyDocument } from '../../types'
-import { message } from 'antd'
+import type { MyDocument } from '@/types'
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 每个分片 5MB
 export const fileAPI = {
@@ -51,8 +50,6 @@ export const fileAPI = {
         body: formData
       }).then(async response => {
         const result = await response.json();
-
-        console.log(`分片 ${i + 1}/${totalChunks} 上传成功`);
         if (result.message === 'Upload completed') {
           console.log('全部上传完成，文件已合并');
         }
@@ -78,8 +75,6 @@ export const fileAPI = {
       const end = Math.min(filesize, start + CHUNK_SIZE);
       const chunk = file.slice(start, end);
       const formData = new FormData();
-      console.log(chunk)
-      
       formData.append('chunk', chunk);
       formData.append('fileId', fileId);
       formData.append('chunkIndex', i.toString());

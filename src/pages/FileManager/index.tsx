@@ -5,24 +5,15 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
-  FileTextOutlined,
-  FileUnknownOutlined
+  ShareAltOutlined,
 } from '@ant-design/icons'
 import useFileStore from '@/store/useFileStore'
 import type { MyDocument } from '@/types'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { useNavigate } from 'react-router-dom'
+import ShareModal from './components/ShareModal'
 
 const { Search } = Input
-
-function getFileIcon(ext: string) {
-  const iconMap: Record<string, any> = {
-    doc: FileTextOutlined,
-    docx: FileTextOutlined,
-  }
-  const Icon = iconMap[ext.toLowerCase()] || FileUnknownOutlined
-  return <Icon className="text-blue-500" />
-}
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -32,12 +23,13 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-
 function FileManager() {
   const navigate = useNavigate()
   const { ODocuments, loading, fetchODocuments, deleteDocument } = useFileStore()
   const [searchText, setSearchText] = useState('')
   const {upload,uploading,progress} = useFileUpload()
+  const [shareModalVisible, setShareModalVisible] = useState(false)
+  const [selectedDocument, setSelectedDocument] = useState<MyDocument | null>(null)
 
   const docList = Array.isArray(ODocuments) ? ODocuments : []
   useEffect(() => {
@@ -103,15 +95,23 @@ function FileManager() {
       title: '更新时间',
       dataIndex: 'updated_at',
       key: 'updatedAt',
+    },{
+      title: '版本号',
+      dataIndex: 'version_number',
+      key: 'version_number',
+      render: (text: string) => {
+        return <Tag>V{text}</Tag>
+      },
     },
     {
       title: '操作',
       key: 'action',
-      width: 320,
+      width: 400,
       render: (_: unknown, record: MyDocument) => (
         <Space size="middle">
           <Button type="text" icon={<EyeOutlined />} onClick={() => { navigate(`/documents/${record.id}/preview`); }}> 查看</Button>
           <Button type="text" icon={<EditOutlined />}>编辑</Button>
+           <Button type="text" icon={<ShareAltOutlined />} onClick={() => { setSelectedDocument(record); setShareModalVisible(true); }}>共享</Button>
           <Popconfirm
             title={`确定删除文件 "${record.title}" 吗？`}
             onConfirm={() => handleDelete(record.id, record.title)}
@@ -127,6 +127,11 @@ function FileManager() {
 
   return (
     <div>
+      <ShareModal
+        visible={shareModalVisible}
+        onCancel={() => setShareModalVisible(false)}
+        document={selectedDocument}
+      />
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between mb-6">
         <div>

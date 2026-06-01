@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Spin } from 'antd'
 import MainLayout from '@/layouts/MainLayout'
+import PreviewLayout from '@/layouts/PreviewLayout'
 import { publicRoutes, privateRoutes } from './routes'
 import PrivateRoute from './PrivateRoute'
 import useUserStore from '@/store/useUserStore'
@@ -26,7 +27,7 @@ function AppRouter() {
 
         <Route element={<PrivateRoute />}>
           <Route element={<MainLayout />}>
-            {privateRoutes.map((route) => (
+            {privateRoutes.filter(route => route.path !== '/documents/:id/edit').map((route) => (
               <Route
                 key={route.path}
                 path={route.path}
@@ -34,6 +35,9 @@ function AppRouter() {
                 element={route.element}
               />
             ))}
+          </Route>
+          <Route element={<PreviewLayout />}>
+            <Route path="/documents/:id/edit" element={privateRoutes.find(r => r.path === '/documents/:id/edit')?.element} />
           </Route>
         </Route>
 

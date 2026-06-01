@@ -23,12 +23,11 @@ const useUserStore = create<UserState>((set) => ({
     const { token='1', user='1' } = response.data||{}
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
-    set({ token, user: user as User, isAuthenticated: true })
+    set({ token, user: user as any, isAuthenticated: true })
   },
 
   register: async (data: RegisterData) => {
     const res=await authAPI.register(data)
-    console.log(res)
     return res.data||{success: false, message: '未知错误'}
   },
 

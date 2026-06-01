@@ -1,14 +1,19 @@
+
 import { lazy } from 'react'
 
-const Login = lazy(() => import('../pages/Login'))
-const Dashboard = lazy(() => import('../pages/Dashboard'))
-const FileManager = lazy(() => import('../pages/FileManager'))
-const DocumentPreview = lazy(() => import('../pages/DocumentPreview'))
-const ShareLink = lazy(() => import('../pages/ShareLink'))
-const AuditLog = lazy(() => import('../pages/AuditLog'))
-const PermissionManage = lazy(() => import('../pages/PermissionManage'))
-const UserManage = lazy(() => import('../pages/UserManage'))
-const NotFound = lazy(() => import('../pages/NotFound'))
+const Login = lazy(() => import('@/pages/Login'))
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const FileManager = lazy(() => import('@/pages/FileManager'))
+const InnerPreview = lazy(() => import('@/pages/FileManager/components/InnerPreview'))
+const DocumentPreview = lazy(() => import('@/pages/DocumentPreview'))
+const ShareLink = lazy(() => import('@/pages/ShareLink'))
+const AuditLog = lazy(() => import('@/pages/AuditLog'))
+const PermissionManage = lazy(() => import('@/pages/PermissionManage'))
+const UserManage = lazy(() => import('@/pages/UserManage'))
+const Workspace = lazy(() => import('@/pages/workspace'))
+const GroupFiles = lazy(() => import('@/pages/workspace/components/GroupFiles'))
+const GroupMembers = lazy(() => import('@/pages/workspace/components/GroupMembers'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
 
 export interface RouteConfig {
   path: string
@@ -26,9 +31,13 @@ export const publicRoutes: RouteConfig[] = [
 export const privateRoutes: RouteConfig[] = [
   { path: '/', element: <Dashboard />, isIndex: true },
   { path: '/files', element: <FileManager /> },
-  { path: '/documents/:id/preview', element: <DocumentPreview /> },
+  { path: '/documents/:id/preview', element: <InnerPreview /> },
+  { path: '/documents/:id/edit', element: <DocumentPreview /> },
   { path: '/audit-log', element: <AuditLog /> },
   { path: '/permissions', element: <PermissionManage /> },
   { path: '/users', element: <UserManage /> },
+  { path: '/workspace', element: <Workspace /> },
+  { path: '/workspace/:id/files', element: <GroupFiles /> },
+  { path: '/workspace/:id/members', element: <GroupMembers /> },
   { path: '*', element: <NotFound /> },
 ]
