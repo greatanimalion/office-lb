@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react'
-import { Form, Input, Button, Checkbox, Card, Tabs, Modal } from 'antd'
+import { useState } from 'react'
+import { Form, Input, Button, Checkbox, Card, Tabs, Modal, message } from 'antd'
 import { CheckCircleOutlined } from '@ant-design/icons'
 import { useAuth } from '@/hooks/useAuth'
 import gitlabIcon from '@/assets/icons/gitlab.svg'
 import dingtalkIcon from '@/assets/icons/dingtalk.svg'
 import weixinIcon from '@/assets/icons/weixin.svg'
+import CaptchaCanvas from './components/captchaCanvas'
+import { authAPI } from '@/services/api/auth'
 function generateCaptchaText() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz0123456789'
   let result = ''
@@ -12,90 +14,6 @@ function generateCaptchaText() {
     result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
   return result
-}
-
-function CaptchaCanvas({ captcha, onRefresh }: { captcha: string; onRefresh: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    const width = canvas.width
-    const height = canvas.height
-
-    ctx.clearRect(0, 0, width, height)
-
-    const bgGradient = ctx.createLinearGradient(0, 0, width, height)
-    bgGradient.addColorStop(0, '#f5f5f5')
-    bgGradient.addColorStop(1, '#e8e8e8')
-    ctx.fillStyle = bgGradient
-    ctx.fillRect(0, 0, width, height)
-
-    for (let i = 0; i < 4; i++) {
-      ctx.beginPath()
-      ctx.moveTo(Math.random() * width, Math.random() * height)
-      ctx.bezierCurveTo(
-        Math.random() * width,
-        Math.random() * height,
-        Math.random() * width,
-        Math.random() * height,
-        Math.random() * width,
-        Math.random() * height
-      )
-      ctx.strokeStyle = `rgba(${Math.floor(Math.random() * 100)}, ${Math.floor(Math.random() * 100)}, ${Math.floor(Math.random() * 100)}, 0.3)`
-      ctx.lineWidth = 1 + Math.random() * 2
-      ctx.stroke()
-    }
-
-    for (let i = 0; i < 30; i++) {
-      ctx.beginPath()
-      ctx.arc(Math.random() * width, Math.random() * height, Math.random() * 2, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(${Math.floor(Math.random() * 150)}, ${Math.floor(Math.random() * 150)}, ${Math.floor(Math.random() * 150)}, 0.5)`
-      ctx.fill()
-    }
-
-    const charWidth = width / captcha.length
-    captcha.split('').forEach((char, index) => {
-      const x = index * charWidth + charWidth / 2
-      const y = height / 2 + Math.sin(index * 1.5) * 5
-
-      ctx.save()
-      ctx.translate(x, y)
-      ctx.rotate((Math.random() - 0.5) * 0.5)
-      
-      const gradient = ctx.createLinearGradient(-20, -15, 20, 15)
-      const colors = ['#333', '#666', '#999', '#000']
-      gradient.addColorStop(0, colors[Math.floor(Math.random() * colors.length)])
-      gradient.addColorStop(1, colors[Math.floor(Math.random() * colors.length)])
-      
-      ctx.font = `${24 + Math.random() * 8}px Arial Black, sans-serif`
-      ctx.fillStyle = gradient
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      
-      const offsetX = (Math.random() - 0.5) * 4
-      const offsetY = (Math.random() - 0.5) * 4
-      ctx.fillText(char, offsetX, offsetY)
-      
-      ctx.restore()
-    })
-  }, [captcha])
-
-  return (
-    <div className="relative">
-      <canvas
-        ref={canvasRef}
-        width={160}
-        height={60}
-        className="rounded-lg cursor-pointer"
-        onClick={onRefresh}
-      />
-    </div>
-  )
 }
 
 function LoginPage() {
@@ -112,7 +30,12 @@ function LoginPage() {
       if (activeTab === 'login') {
         await handleLogin(values.email, values.password)
       } else {
-        await handleRegister(values.username, values.email, values.password)
+        const res = await handleRegister(values.username, values.email, values.password, values.captcha)
+        if(res.success){
+          message.success(res.message)
+        }else{
+          message.error(res.message)
+        }
       }
     } catch (error) {
       console.error('Form validation failed:', error)
@@ -125,13 +48,19 @@ function LoginPage() {
     setShowCaptchaModal(true)
   }
 
-  const handleConfirmCaptcha = () => {
+  const handleConfirmCaptcha = async () => {
     if (captchaInput.toLowerCase() === modalCaptcha.toLowerCase()) {
       form.setFieldsValue({ captcha: captchaInput })
       setShowCaptchaModal(false)
+      const res=await authAPI.sendEmail(form.getFieldValue('email'))
+      if(res.data.success){
+        message.success(res.data.message)
+      }else{
+        message.error(res.data.message)
+      }
       setCaptchaInput('')
     } else {
-      alert('验证码错误，请重新输入')
+      message.error('验证码错误，请重新输入')
       setModalCaptcha(generateCaptchaText())
       setCaptchaInput('')
     }
@@ -146,7 +75,6 @@ function LoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 bg-linear-to-br from-blue-400 via-purple-500 to-amber-300" />
-      <div className="absolute inset-0 bg-linear-to-tr from-cyan-400 via-teal-300 to-yellow-300 opacity-50" />
 
       <div className="relative z-10 flex items-center justify-center w-full max-w-6xl mx-auto px-8">
         <div className="flex-1 mr-16 text-white">

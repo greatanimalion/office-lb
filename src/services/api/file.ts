@@ -93,7 +93,7 @@ export const fileAPI = {
         error: null,
       })
     }
-    await request.post<MyDocument>('/api/documents/chunk/merge', {fileId})
+    await request.post<MyDocument>('/api/documents/chunk/merge', {fileId,fileSize:filesize})
     setTimeout(() => {
       setState?.({
         progress: 0,

@@ -7,7 +7,7 @@ interface UserState {
   token: string | null
   isAuthenticated: boolean
   login: (data: LoginData) => Promise<void>
-  register: (data: RegisterData) => Promise<void>
+  register: (data: RegisterData) => Promise<{success: boolean, message: string}>
   logout: () => void
   fetchProfile: () => Promise<void>
   setUser: (user: User) => void
@@ -27,7 +27,9 @@ const useUserStore = create<UserState>((set) => ({
   },
 
   register: async (data: RegisterData) => {
-    await authAPI.register(data)
+    const res=await authAPI.register(data)
+    console.log(res)
+    return res.data||{success: false, message: '未知错误'}
   },
 
   logout: () => {

@@ -53,13 +53,13 @@ function FileManager() {
       const result = await upload(file)
       if (result) {
         message.success(`文件 "${result.filename}" 上传成功`)
+        fetchODocuments({ page: 1, pageSize: 10 })
       } else {
         message.error('文件上传失败')
       }
     } catch (error) {
       message.error('文件上传失败')
-    } finally {
-    }
+    } 
     return false
   }
   const handleDelete = async (id: number, title: string) => {
@@ -82,7 +82,8 @@ function FileManager() {
     {
       title: '大小',
       dataIndex: 'fileSize',
-      key: 'fileSize'
+      key: 'fileSize',
+      render: (text: number) => formatFileSize(text)
     },
     {
       title: '类型',
@@ -194,7 +195,6 @@ function FileManager() {
       </div>
 
       {/* 文档列表 */}
-    
         <Table
           columns={columns}
           dataSource={docList}
