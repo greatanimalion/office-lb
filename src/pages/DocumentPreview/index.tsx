@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { Spin, Button } from 'antd'
-import { ArrowLeftOutlined } from '@ant-design/icons'
+import { useParams } from 'react-router-dom'
+import { Spin } from 'antd'
 import { fileAPI } from '@/services/api/file'
 import {DocumentEditor} from "@onlyoffice/document-editor-react"
 
 
 function DocumentPreview() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [documentConfig, setDocumentConfig] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   useEffect(() => {
@@ -23,14 +21,6 @@ function DocumentPreview() {
   }, [id])
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-gray-200 bg-white">
-        <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
-          返回
-        </Button>
-        <Button  type="dashed" onClick={() => window.open(`/documents/${id}/edit`, '_blank')}>
-          在新页面打开
-        </Button>
-      </div>
       <div className="flex-1 relative">
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-white">

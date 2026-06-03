@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Modal, Form, Input, Select, DatePicker, InputNumber, Checkbox, message, Button, Space } from 'antd'
 import { ShareAltOutlined, UserOutlined, LinkOutlined, LockOutlined, ClockCircleOutlined } from '@ant-design/icons'
-import type { MyDocument } from '@/types'
+import type { MyDocument, User } from '@/types'
+import { authAPI } from '@/services/api/auth'
+import { groupAPI } from '@/services/api/group'
 
 const { RangePicker } = DatePicker
 
@@ -13,8 +15,26 @@ interface ShareModalProps {
 
 function ShareModal({ visible, onCancel, document }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<'internal' | 'external'>('internal')
+  const [userNames, setUserNames] = useState<{ name: string, id: number }[]>([])
+  const [groupNames, setGroupNames] = useState<{ name: string, id: number }[]>([])
+  const [selectedUserOrGroup, setSelectedUserOrGroup] = useState<string>("user")
+  const [selectedUserOrGroupValue, setSelectedUserOrGroupValue] = useState<string>("")
   const [form] = Form.useForm()
-
+  useEffect(() => {
+    async function getNames() {
+      try {
+        const res = await authAPI.getAllUser()
+        if (res.data.success) {
+          setUserNames(res.data.user.map(user => ({ name: user.username, id: user.id })))
+        }
+        const res2 = await groupAPI.list()
+        setGroupNames(res2.data.map(group => ({ name: group.name, id: group.id })))
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    getNames()
+  }, [])
   const handleSubmit = () => {
     const values = form.getFieldsValue()
     if (activeTab === 'internal') {
@@ -49,11 +69,10 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
         <Space>
           <button
             type="button"
-            className={`px-4 py-2   font-medium transition-colors ${
-              activeTab === 'internal'
+            className={`px-4 py-2   font-medium transition-colors ${activeTab === 'internal'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+              }`}
             onClick={() => setActiveTab('internal')}
           >
             <span className="flex items-center gap-2">
@@ -63,11 +82,10 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
           </button>
           <button
             type="button"
-            className={`px-4 py-2   font-medium transition-colors ${
-              activeTab === 'external'
+            className={`px-4 py-2   font-medium transition-colors ${activeTab === 'external'
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
+              }`}
             onClick={() => setActiveTab('external')}
           >
             <span className="flex items-center gap-2">
@@ -88,11 +106,24 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
                   placeholder="选择用户或分组"
                   style={{ width: 250 }}
                   allowClear
+                  value={selectedUserOrGroup}
+                  onChange={(value)=>{setSelectedUserOrGroup(value);setSelectedUserOrGroupValue("") }}
                 >
                   <Select.Option value="user">用户</Select.Option>
                   <Select.Option value="group">分组</Select.Option>
                 </Select>
-                <Input placeholder="输入用户名或分组名" style={{ width: 180 }} />
+                <Select
+                  placeholder="选择用户或分组"
+                  style={{ width: 250 }}
+                  allowClear
+                  value={selectedUserOrGroupValue}
+                  onChange={setSelectedUserOrGroupValue}>
+                  {selectedUserOrGroup === 'user' ? userNames.map(user => (
+                    <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+                  )) : groupNames.map(group => (
+                    <Select.Option key={group.id} value={group.id}>{group.name}</Select.Option>
+                  ))}
+                </Select>
               </div>
               <Select
                 placeholder="权限设置"

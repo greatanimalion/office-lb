@@ -1,5 +1,6 @@
 import request from '../request'
 import type { Group, GroupMember, GroupDocument } from '../../types'
+import type { Folder } from '@/types/file';
 
 export const groupAPI = {
   list: () =>
@@ -28,4 +29,10 @@ export const groupAPI = {
 
   deleteDocument: (groupId: number, documentId: number) =>
     request.delete(`/api/groups/${groupId}/documents/${documentId}`),
+  getFolders: (groupId?: number,parentFolderId?: number) =>{
+    return request.get<Folder[]>(`/api/folders`, { params: { groupId, parentFolderId } })
+  },
+
+  createFolder: (groupId: number,permission: number,filename: string,parentFolderId?: number) =>
+    request.post<Folder>(`/api/folders`, { permission, groupId,filename,parentFolderId }),
 }

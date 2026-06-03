@@ -149,7 +149,9 @@ function MainLayout() {
         Layout: {
           headerBg: effectiveTheme=="dark" ? '#141414' : '#ffffff', // 暗色模式常用背景色，亮色模式白色
         },
-      },
+      },token: {
+          colorPrimary: '#f5222d',
+        },
       }}
     >
       <Layout style={{ height: '100vh', overflow: 'hidden'}} >

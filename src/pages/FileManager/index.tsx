@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Table, Upload, Button, Input, Space, Popconfirm, message, Tag, Progress } from 'antd'
+import { Table, Upload, Button, Input, Space, Popconfirm, message, Tag, Progress, Card, Statistic } from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
@@ -177,25 +177,26 @@ function FileManager() {
 
       {/* 文档统计卡片 */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-blue-600">{docList.length}</div>
-          <div className="text-sm text-gray-600">总文档数</div>
+        <div className=" rounded-lg p-4">
+           <Card>
+            <Statistic title="文档总数" value={docList.length} />
+          </Card>
         </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-green-600">0</div>
-          <div className="text-sm text-gray-600">已分享</div>
+        <div className="  rounded-lg p-4">
+           <Card>
+            <Statistic title="已分享" value={0}  />
+          </Card>
         </div>
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-yellow-600">
-            {formatFileSize(docList.reduce((sum, d) => sum + (d.fileSize || 0), 0))}
-          </div>
-          <div className="text-sm text-gray-600">总大小</div>
+        <div className="yellow-50 rounded-lg p-4">
+           <Card>
+            <Statistic title="文档总数" value={formatFileSize(docList.reduce((sum, d) => sum + (d.fileSize || 0), 0))}  />
+          </Card>
+         
         </div>
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="text-2xl font-bold text-purple-600">
-            {new Set(docList.map(d => d.title.split('.').pop())).size}
-          </div>
-          <div className="text-sm text-gray-600">文件类型</div>
+        <div className="  rounded-lg p-4">
+           <Card>
+            <Statistic title="文档类型" value={new Set(docList.map(d => d.title.split('.').pop())).size}  />
+          </Card>
         </div>
       </div>
 

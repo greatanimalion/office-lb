@@ -12,6 +12,6 @@ export const authAPI = {
     message:string
     success:boolean
   }>('/api/auth/sendcode', { email }),
-
+  getAllUser: () => request.get<{success:boolean,message:string,user:User[]}>('/api/auth/user/all'),
   profile: () => request.get<User>('/api/auth/profile'),
 }

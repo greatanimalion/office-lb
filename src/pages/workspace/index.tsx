@@ -6,8 +6,6 @@ import useGroupStore from '@/store/useGroupStore'
 import type { Group } from '@/types'
 import { formatDate } from '@/utils/day'
 
-
-
 function Workspace() {
   const navigate = useNavigate()
   const { groups, loading, fetchGroups, createGroup, deleteGroup } = useGroupStore()

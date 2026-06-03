@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Table, Button, Tag, Space, Card, Empty, Spin, message, Avatar, Tabs } from 'antd'
+import { Table, Button, Tag, Space, Card, Empty, Spin, message, Avatar, Tabs, Modal, Form, Input, Checkbox } from 'antd'
 import {
   ArrowLeftOutlined,
   FileTextOutlined,
@@ -12,11 +12,25 @@ import {
   EyeOutlined,
   DeleteOutlined,
   UserOutlined,
+  FolderOutlined,
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import type { GroupDocument, GroupMember } from '@/types'
 import { groupAPI } from '@/services/api/group'
 import { formatDate } from '@/utils/day'
+import { PermissionType } from '@/types'
+import { formatFileSize } from '@/utils/file'
+import { permissonToBinary } from '@/utils/permission'
+const permissionOptions: { value: PermissionType; label: string }[] = [
+  { value: PermissionType.VIEW, label: '查看' },
+  { value: PermissionType.DOWNLOAD, label: '下载' },
+  { value: PermissionType.EDIT, label: '编辑' },
+  { value: PermissionType.DELETE, label: '删除' },
+  { value: PermissionType.COMMENT, label: '评论' },
+  { value: PermissionType.CHANGE_PERMISSION, label: '修改权限' },
+  { value: PermissionType.SHARE, label: '分享' },
+  { value: PermissionType.MAKE_TEMPLATE, label: '设为模板' },
+]
 
 function getFileIcon(ext: string) {
   const iconMap: Record<string, React.ReactNode> = {
@@ -34,39 +48,32 @@ function getFileIcon(ext: string) {
   return iconMap[ext.toLowerCase()] || <FileUnknownOutlined className="text-gray-400" />
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-
 
 function GroupFiles() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentGroup, documents, members, fetchDocuments, fetchMembers } = useGroupStore()
+  const { currentGroup, documents, members, getFolders, fetchMembers,currentFolder } = useGroupStore()
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('files')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [form] = Form.useForm()
 
   useEffect(() => {
     if (!id) return
     const groupId = Number(id)
     setLoading(true)
     if (activeTab === 'files') {
-      fetchDocuments(groupId).finally(() => setLoading(false))
+      getFolders(groupId).finally(() => setLoading(false))
     } else {
       fetchMembers(groupId).finally(() => setLoading(false))
     }
-  }, [id, activeTab, fetchDocuments, fetchMembers])
+  }, [id, activeTab, getFolders, fetchMembers])
 
   const handleDeleteDocument = async (docId: number) => {
     try {
       await groupAPI.deleteDocument?.(Number(id), docId)
       message.success('删除成功')
-      fetchDocuments(Number(id))
+      getFolders(Number(id))
     } catch {
       message.error('删除失败')
     }
@@ -79,6 +86,24 @@ function GroupFiles() {
       fetchMembers(Number(id))
     } catch {
       message.error('移除失败')
+    }
+  }
+
+  const handleCreateFolder = async () => {
+    try {
+      const values = await form.validateFields()
+      const folderData = {
+        name: values.name,
+        permissions: values.permissions || []
+      }
+      console.log(folderData)
+      await groupAPI.createFolder(Number(id), permissonToBinary(folderData.permissions), folderData.name, currentFolder?.id)
+      message.success('文件夹创建成功')
+      setIsCreateModalOpen(false)
+      form.resetFields()
+      getFolders(Number(id))
+    } catch (error) {
+      message.error('创建失败')
     }
   }
 
@@ -207,22 +232,33 @@ function GroupFiles() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/workspace')}
-        >
-          返回
-        </Button>
-        <div>
-          <h2 className="text-xl font-bold mb-1">
-            {currentGroup?.name || '组详情'}
-          </h2>
-          <p className="text-gray-500 text-sm">
-            {activeTab === 'files' ? '查看组内所有成员上传的文件' : '管理组成员'}
-          </p>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate('/workspace')}
+          >
+            返回
+          </Button>
+          <div>
+            <h2 className="text-xl font-bold mb-1">
+              {currentGroup?.name || '组详情'}
+            </h2>
+            <p className="text-gray-500 text-sm">
+              {activeTab === 'files' ? '查看组内所有成员上传的文件' : '管理组成员'}
+            </p>
+          </div>
         </div>
+        {activeTab === 'files' && (
+          <Button
+            type="primary"
+            icon={<FolderOutlined />}
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            创建文件夹
+          </Button>
+        )}
       </div>
 
       <Card className="flex-1">
@@ -280,6 +316,31 @@ function GroupFiles() {
           ]}
         />
       </Card>
+
+      <Modal
+        title="创建文件夹"
+        open={isCreateModalOpen}
+        onOk={handleCreateFolder}
+        onCancel={() => {
+          setIsCreateModalOpen(false)
+          form.resetFields()
+        }}
+        okText="创建"
+        cancelText="取消"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="name"
+            label="文件夹名称"
+            rules={[{ required: true, message: '请输入文件夹名称' }]}
+          >
+            <Input placeholder="请输入文件夹名称" />
+          </Form.Item>
+          <Form.Item name="permissions" label="权限设置">
+            <Checkbox.Group options={permissionOptions} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Group, GroupMember, GroupDocument } from '../types'
 import { groupAPI } from '../services/api/group'
+import type { Folder } from '@/types/file'
 
 interface GroupState {
   groups: Group[]
@@ -8,9 +9,11 @@ interface GroupState {
   members: GroupMember[]
   documents: GroupDocument[]
   loading: boolean
+  folders: Folder[]
+  currentFolder: Folder | null
+  getFolders: (groupId?: number, parentFolderId?: number) => Promise<void>
   fetchGroups: () => Promise<void>
   fetchMembers: (groupId: number) => Promise<void>
-  fetchDocuments: (groupId: number, params?: { page: number; pageSize: number }) => Promise<void>
   createGroup: (data: { name: string; description?: string }) => Promise<Group | null>
   deleteGroup: (id: number) => Promise<boolean>
 }
@@ -20,7 +23,9 @@ const useGroupStore = create<GroupState>((set, get) => ({
   currentGroup: null,
   members: [],
   documents: [],
+  folders: [],
   loading: false,
+  currentFolder: null,
 
   fetchGroups: async () => {
     set({ loading: true })
@@ -41,15 +46,6 @@ const useGroupStore = create<GroupState>((set, get) => ({
     }
   },
 
-  fetchDocuments: async (groupId: number, params = { page: 1, pageSize: 20 }) => {
-    try {
-      const response = await groupAPI.getDocuments(groupId, params)
-      set({ documents: response.data })
-    } catch {
-      set({ documents: [] })
-    }
-  },
-
   createGroup: async (data: { name: string; description?: string }) => {
     try {
       const response = await groupAPI.create(data)
@@ -59,7 +55,6 @@ const useGroupStore = create<GroupState>((set, get) => ({
       return null
     }
   },
-
   deleteGroup: async (id: number) => {
     try {
       await groupAPI.delete(id)
@@ -69,6 +64,14 @@ const useGroupStore = create<GroupState>((set, get) => ({
       return false
     }
   },
+  getFolders: async (groupId?: number, parentFolderId?: number) => {
+    try {
+      const response = await groupAPI.getFolders(groupId, parentFolderId)
+      set({ folders: response.data })
+    } catch {
+      set({ folders: [] })
+    }
+  }
 }))
 
 export default useGroupStore
