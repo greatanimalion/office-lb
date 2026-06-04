@@ -20,7 +20,7 @@ export interface GroupMember {
   email: string
   avatar?: string
   role: 'owner' | 'admin' | 'member'
-  joinedAt: string
+  createdAt: string
 }
 
 export interface GroupDocument extends MyDocument {

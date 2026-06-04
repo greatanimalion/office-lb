@@ -1,6 +1,6 @@
 export type { User, LoginData, RegisterData, LoginResponse } from './user'
 export type { MyDocument, ShareData, UploadProgress } from './file'
-export type { Permission as UserPermission, PermissionRule, RolePermission } from './permission'
+
 export type { AuditLog } from './audit'
 export type { Group, GroupMember, GroupDocument } from './group'
 

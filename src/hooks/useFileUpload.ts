@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { fileAPI } from '../services/api/file'
-
+import useFileStore from '@/store/useFileStore'
 interface UploadState {
   uploading: boolean
   progress: number
@@ -13,13 +13,11 @@ export function useFileUpload() {
     progress: 0,
     error: null,
   })
-  const [, setFileId] = useState<string | null>(null)
   const upload = useCallback(async (file: File) => {
     setState({ uploading: true, progress: 0, error: null })
     try {
       const response = await fileAPI.chunkInit(file)
-      setFileId(response.fileId)
-      fileAPI.chunkUpload(response.fileId,file,setState)
+      await fileAPI.chunkUpload(response.fileId,file,setState) 
       return response
     } catch { 
       // setState((prev) => ({ ...prev, uploading: false, error: '上传失败' }))
@@ -32,3 +30,4 @@ export function useFileUpload() {
   }, [])
   return { ...state, upload, reset }
 }
+

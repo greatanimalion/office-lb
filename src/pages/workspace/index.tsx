@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Card, Button, Modal, Form, Input, message, Avatar, Popconfirm, Empty, Table, Space } from 'antd'
 import { PlusOutlined, TeamOutlined, FileTextOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
 import useGroupStore from '@/store/useGroupStore'
 import type { Group } from '@/types'
 import { formatDate } from '@/utils/day'
+import { GroupDetail } from './components'
 
 function Workspace() {
-  const navigate = useNavigate()
-  const { groups, loading, fetchGroups, createGroup, deleteGroup } = useGroupStore()
+  const { groups, loading, fetchGroups, createGroup, deleteGroup, setCurrentGroup } = useGroupStore()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [form] = Form.useForm()
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
 
   useEffect(() => {
     fetchGroups()
@@ -42,7 +42,12 @@ function Workspace() {
   }
 
   const handleGroupClick = (group: Group) => {
-    navigate(`/workspace/${group.id}/files`)
+    setCurrentGroup(group)
+    setSelectedGroup(group)
+  }
+
+  const handleBack = () => {
+    setSelectedGroup(null)
   }
 
   const groupColumns = [
@@ -120,6 +125,10 @@ function Workspace() {
       ),
     },
   ]
+
+  if (selectedGroup) {
+    return <GroupDetail groupId={selectedGroup.id} onBack={handleBack} />
+  }
 
   return (
     <div className="h-full flex flex-col">

@@ -57,7 +57,6 @@ export const fileAPI = {
       }).catch(err => {
         console.error(`分片 ${i + 1} 上传失败: ${err.message}`);
       });
-
       uploadPromises.push(promise);
     }
 

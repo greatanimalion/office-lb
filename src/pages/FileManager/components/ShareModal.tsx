@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Modal, Form, Input, Select, DatePicker, InputNumber, Checkbox, message, Button, Space } from 'antd'
 import { ShareAltOutlined, UserOutlined, LinkOutlined, LockOutlined, ClockCircleOutlined } from '@ant-design/icons'
-import type { MyDocument, User } from '@/types'
+import { PermissionType, type MyDocument } from '@/types'
 import { authAPI } from '@/services/api/auth'
 import { groupAPI } from '@/services/api/group'
 
@@ -12,13 +12,24 @@ interface ShareModalProps {
   onCancel: () => void
   document: MyDocument | null
 }
-
+const options=[ {
+  label: '可编辑',
+  value: PermissionType.EDIT,
+},{
+  label: '可评论',
+  value: PermissionType.COMMENT,
+},{
+  label: '可下载',
+  value: PermissionType.DOWNLOAD,
+}
+]
 function ShareModal({ visible, onCancel, document }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<'internal' | 'external'>('internal')
   const [userNames, setUserNames] = useState<{ name: string, id: number }[]>([])
   const [groupNames, setGroupNames] = useState<{ name: string, id: number }[]>([])
   const [selectedUserOrGroup, setSelectedUserOrGroup] = useState<string>("user")
   const [selectedUserOrGroupValue, setSelectedUserOrGroupValue] = useState<string>("")
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
   const [form] = Form.useForm()
   useEffect(() => {
     async function getNames() {
@@ -36,9 +47,19 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
     getNames()
   }, [])
   const handleSubmit = () => {
-    const values = form.getFieldsValue()
+    if(!selectedUserOrGroupValue){
+      message.error("请选择用户或分组")
+      return
+    }
+    if(!selectedPermissions.length){
+      message.error("请选择权限")
+      return
+    }
+    form.getFieldsValue()
     if (activeTab === 'internal') {
-      message.success('内部共享设置成功')
+      const messageStr=selectedUserOrGroup==="user"?"已分享至用户"+selectedUserOrGroupValue:"已分享至分组"+selectedUserOrGroupValue
+      message.success(messageStr)
+      console.log(selectedUserOrGroupValue,selectedUserOrGroup,selectedPermissions)
     } else {
       message.success('外链共享链接已生成')
     }
@@ -60,7 +81,7 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
           取消
         </Button>,
         <Button key="submit" type="primary" onClick={handleSubmit}>
-          {activeTab === 'internal' ? '保存设置' : '生成链接'}
+          {activeTab === 'internal' ? '分享' : '生成链接'}
         </Button>,
       ]}
       width={500}
@@ -119,20 +140,20 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
                   value={selectedUserOrGroupValue}
                   onChange={setSelectedUserOrGroupValue}>
                   {selectedUserOrGroup === 'user' ? userNames.map(user => (
-                    <Select.Option key={user.id} value={user.id}>{user.name}</Select.Option>
+                    <Select.Option key={user.id} value={user.name}>{user.name}</Select.Option>
                   )) : groupNames.map(group => (
-                    <Select.Option key={group.id} value={group.id}>{group.name}</Select.Option>
+                    <Select.Option key={group.id} value={group.name}>{group.name}</Select.Option>
                   ))}
                 </Select>
               </div>
               <Select
+                mode="multiple"
                 placeholder="权限设置"
                 style={{ width: '100%' }}
-              >
-                <Select.Option value="read">只读</Select.Option>
-                <Select.Option value="edit">可编辑</Select.Option>
-                <Select.Option value="admin">管理员</Select.Option>
-              </Select>
+                options={options}
+                value={selectedPermissions}
+                onChange={setSelectedPermissions}
+                defaultValue={["可读","可编辑","可下载"]}/>
             </div>
           </div>
         </Form>
@@ -171,11 +192,9 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
                 <span className="text-gray-500">次</span>
               </div>
             </Form.Item>
-
             <Form.Item>
               <Checkbox>允许他人下载</Checkbox>
             </Form.Item>
-
             <Form.Item>
               <Checkbox>允许他人编辑</Checkbox>
             </Form.Item>

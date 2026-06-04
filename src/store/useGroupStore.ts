@@ -16,6 +16,7 @@ interface GroupState {
   fetchMembers: (groupId: number) => Promise<void>
   createGroup: (data: { name: string; description?: string }) => Promise<Group | null>
   deleteGroup: (id: number) => Promise<boolean>
+  setCurrentGroup: (group: Group | null) => void
 }
 
 const useGroupStore = create<GroupState>((set, get) => ({
@@ -71,6 +72,9 @@ const useGroupStore = create<GroupState>((set, get) => ({
     } catch {
       set({ folders: [] })
     }
+  },
+  setCurrentGroup: (group: Group | null) => {
+    set({ currentGroup: group })
   }
 }))
 

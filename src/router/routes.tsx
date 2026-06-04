@@ -11,8 +11,6 @@ const AuditLog = lazy(() => import('@/pages/AuditLog'))
 const PermissionManage = lazy(() => import('@/pages/PermissionManage'))
 const UserManage = lazy(() => import('@/pages/UserManage'))
 const Workspace = lazy(() => import('@/pages/workspace'))
-const GroupFiles = lazy(() => import('@/pages/workspace/components/GroupFiles'))
-const GroupMembers = lazy(() => import('@/pages/workspace/components/GroupMembers'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 
 export interface RouteConfig {
@@ -37,7 +35,6 @@ export const privateRoutes: RouteConfig[] = [
   { path: '/permissions', element: <PermissionManage /> },
   { path: '/users', element: <UserManage /> },
   { path: '/workspace', element: <Workspace /> },
-  { path: '/workspace/:id/files', element: <GroupFiles /> },
-  { path: '/workspace/:id/members', element: <GroupMembers /> },
+
   { path: '*', element: <NotFound /> },
 ]

@@ -2,12 +2,21 @@
  * 传入字符串，转化为刚刚，一分钟前，一小时前，然后是具体时间xxxx-xx-xx xx:xx:xx
 */
 export function formatDate(dateStr: string): string {
+  if (!dateStr) return ''
+  
   const date = new Date(dateStr)
+  
+  if (isNaN(date.getTime())) {
+    console.warn('Invalid date string:', dateStr)
+    return dateStr
+  }
+  
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const diffInMinutes = diff / (1000 * 60)
   const diffInHours = diff / (1000 * 60 * 60)
   const diffInDays = diff / (1000 * 60 * 60 * 24)
+  
   if (diffInMinutes < 1) {
     return '刚刚'
   }
@@ -17,6 +26,7 @@ export function formatDate(dateStr: string): string {
   if (diffInDays < 1) {
     return `${Math.floor(diffInHours)}小时前`
   }
+  
   return date.toLocaleString('zh-CN', {
     year: 'numeric',
     month: '2-digit',

@@ -29,8 +29,8 @@ export const groupAPI = {
 
   deleteDocument: (groupId: number, documentId: number) =>
     request.delete(`/api/groups/${groupId}/documents/${documentId}`),
-  getFolders: (groupId?: number,parentFolderId?: number) =>{
-    return request.get<Folder[]>(`/api/folders`, { params: { groupId, parentFolderId } })
+  getFolders:async (groupId?: number,parentFolderId?: number) =>{
+    return (await request.get<{success:boolean,data:Folder[]}>(`/api/folders`, { params: { groupId, parentFolderId } })).data
   },
 
   createFolder: (groupId: number,permission: number,filename: string,parentFolderId?: number) =>
