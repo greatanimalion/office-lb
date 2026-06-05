@@ -1,14 +1,14 @@
 /**
  * 传入字符串，转化为刚刚，一分钟前，一小时前，然后是具体时间xxxx-xx-xx xx:xx:xx
 */
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string|Date): string {
   if (!dateStr) return ''
   
   const date = new Date(dateStr)
   
   if (isNaN(date.getTime())) {
     console.warn('Invalid date string:', dateStr)
-    return dateStr
+    return dateStr.toString()
   }
   
   const now = new Date()

@@ -3,6 +3,7 @@ export interface User {
   username: string
   email: string
   avatar?: string
+  group_id?: number
   role?: 'admin' | 'user'
   createdAt?: string
 }
@@ -21,6 +22,7 @@ export interface RegisterData {
 
 export interface LoginResponse {
   token: string
+  message: string
   user: {
     id: number
     username: string

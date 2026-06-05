@@ -1,4 +1,4 @@
-import { Layout, Menu, Button, Avatar, Input, Dropdown, Badge, theme as antdTheme, ConfigProvider, } from 'antd'
+import { Layout, Menu, Button, Avatar, Input, Dropdown, Badge, theme as antdTheme, ConfigProvider } from 'antd'
 import {
   FileTextOutlined,
   ShareAltOutlined,
@@ -23,13 +23,17 @@ import {
   BgColorsOutlined,
   SunOutlined,
   MoonOutlined,
-  SyncOutlined
+  SyncOutlined,
+  UsergroupDeleteOutlined
 } from '@ant-design/icons'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import useUserStore from '../store/useUserStore'
 import useGlobalStore from '../store/useGlobalStore'
+import useGroupStore from '../store/useGroupStore'
+import { GroupSwitchModal } from './components/GroupSwitchModal'
 import logo from '@/assets/images/office.png'
 import { useTheme } from '@/hooks/useTheme'
+import { useState, useEffect } from 'react'
 const { Header, Content, Sider } = Layout
 const { Search } = Input
 
@@ -51,6 +55,20 @@ function MainLayout() {
   const { user, logout } = useUserStore()
   const { sidebarCollapsed, toggleSidebar } = useGlobalStore()
   const { mode, effectiveTheme, changeMode } = useTheme();
+  const { groups, fetchGroups, currentGroup } = useGroupStore()
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false)
+
+  useEffect(() => {
+    fetchGroups()
+  }, [fetchGroups])
+
+  const createdGroups = groups.filter(group => group.ownerId === user?.id)
+  const joinedGroups = groups.filter(group => group.ownerId !== user?.id)
+
+  const handleChangeGroup = () => {
+    setIsGroupModalOpen(true)
+  }
+
   const getAlgorithm = () => {
     return effectiveTheme === 'dark'
       ? antdTheme.darkAlgorithm
@@ -64,6 +82,7 @@ function MainLayout() {
   const userMenuItems = [
     { key: 'profile', icon: <UserOutlined />, label: '个人中心' },
     { key: 'settings', icon: <SettingOutlined />, label: '设置' },
+    { key: 'changeGroup', icon:<UsergroupDeleteOutlined />, label: '切换组', onClick: handleChangeGroup },
     { type: 'divider' as const },
     { key: 'logout', icon: <LogoutOutlined />, label: '退出登录', onClick: handleLogout },
   ]
@@ -217,7 +236,14 @@ function MainLayout() {
             <Outlet />
           </Content>
         </Layout>
-      </Layout >
+      </Layout>
+      <GroupSwitchModal
+        open={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        createdGroups={createdGroups}
+        joinedGroups={joinedGroups}
+        currentGroupId={currentGroup?.id}
+      />
     </ConfigProvider>
   )
 }

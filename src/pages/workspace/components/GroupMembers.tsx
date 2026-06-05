@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Tag, Space, Card, Empty, Spin, message, Avatar, Modal, Form, Select } from 'antd'
+import { Table, Button, Tag, Space, Empty, Spin, message, Avatar, Modal, Form, Select } from 'antd'
 import {
   DeleteOutlined,
   UserOutlined,
@@ -163,7 +163,6 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
         </Button>
       </div>
 
-      <Card className="flex-1">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Spin size="large" />
@@ -181,7 +180,6 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
             pagination={false}
           />
         )}
-      </Card>
 
       <Modal
         title="添加成员"

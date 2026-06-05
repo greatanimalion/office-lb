@@ -1,6 +1,6 @@
 import request from '../request'
-import type { Group, GroupMember, GroupDocument } from '../../types'
-import type { Folder } from '@/types/file';
+import type { Group, GroupMember } from '../../types'
+import type { Folder, MyDocument } from '@/types/file';
 
 export const groupAPI = {
   list: () =>
@@ -25,14 +25,20 @@ export const groupAPI = {
     request.delete(`/api/groups/${groupId}/members/${userId}`),
 
   getDocuments: (groupId: number, params?: { page: number; pageSize: number }) =>
-    request.get<GroupDocument[]>(`/api/groups/${groupId}/documents`, { params }),
+    request.get<MyDocument[]>(`/api/groups/${groupId}/documents`, { params }),
 
   deleteDocument: (groupId: number, documentId: number) =>
     request.delete(`/api/groups/${groupId}/documents/${documentId}`),
+  /**
+   * 必须存在一个真
+  */
   getFolders:async (groupId?: number,parentFolderId?: number) =>{
     return (await request.get<{success:boolean,data:Folder[]}>(`/api/folders`, { params: { groupId, parentFolderId } })).data
   },
 
   createFolder: (groupId: number,permission: number,filename: string,parentFolderId?: number) =>
     request.post<Folder>(`/api/folders`, { permission, groupId,filename,parentFolderId }),
+
+  shareDocumentToGroup: (groupId: number, documentId: number) =>
+    request.post(`/api/groups/${groupId}/documents`, { documentId }),
 }

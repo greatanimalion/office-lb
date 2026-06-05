@@ -1,14 +1,19 @@
-export interface MyDocument {
+export type OwnerType = 'group'|'user'|'folder'|'public'
+
+export interface MyDocument  {
   id: number
   title: string
   filename: string
-  filePath: string
-  fileType: string
-  fileSize?: number
-  createdAt: string
-  updatedAt: string
-  userId: number
-  username?: string
+  filepath: string
+  owner_id: number
+  owner_type: OwnerType
+  fileSize: number
+  version_number: number
+  status: string
+  locked: boolean
+  locked_by?: number
+  created_at: string
+  updated_at: string
 }
 
 export interface ShareData {
@@ -28,4 +33,14 @@ export interface Folder {
   groupId: number
   createdAt: Date
   updatedAt: Date
+}
+export interface DocumentVersion {
+  id: number
+  filename: string
+  document_id: number
+  version_number: number
+  filesize: number
+  filepath: string
+  created_by: number
+  created_at: Date
 }

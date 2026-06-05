@@ -1,20 +1,20 @@
 
+import type { DocumentVersion } from '@/types/file';
 import request from '../request'
 import type { MyDocument } from '@/types'
 
 const CHUNK_SIZE = 5 * 1024 * 1024; // 每个分片 5MB
 export const fileAPI = {
-  list: (params: { page:number, pageSize:number}) =>
-    request.get<MyDocument[]>('/api/documents/all', { params }),
-
+  list: (params: { page:number, pageSize:number,owner_id?:number,owner_type?:'folder'|'group'|'user'|'public'})=>
+    request.get<{success: boolean,data: MyDocument[]}>('/api/documents/all', { params }),
   get: (id: number) =>
     request.get<MyDocument>(`/documents/${id}`),
-
   create: (data: FormData) =>
     request.post<{ id: number; title: string }>('/documents', data, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-
+  upLoadToGroup: (documentId: number,targetId: number,owner_type: 'folder'|'group') =>
+    request.post<{success: boolean,message: string}>('/api/documents/uploadToGroup',{targetId, documentId,owner_type}),  
   update: (id: number, data: { title: string }) =>
     request.put(`/documents/${id}`, data),
 
@@ -108,5 +108,12 @@ export const fileAPI = {
       hash,
     })
     return res.data
-  }
+  },
+
+  getDocumentVersions: (documentId: number) =>
+    request.get<{ success: boolean, data: DocumentVersion[] }>(`/api/documents/${documentId}/versions`),
+
+  revertToVersion: (documentId: number, versionId: number) =>
+    request.post(`/api/documents/${documentId}/versions/${versionId}/revert`),
 }
+

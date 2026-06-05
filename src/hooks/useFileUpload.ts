@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
-import { fileAPI } from '../services/api/file'
-import useFileStore from '@/store/useFileStore'
+import { fileAPI } from '@/services/api/file'
 interface UploadState {
   uploading: boolean
   progress: number

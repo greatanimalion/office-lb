@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react'
-import { Table, Upload, Button, Input, Space, Popconfirm, message, Tag, Progress, Card, Statistic } from 'antd'
+import { Table, Upload, Button, Input, Space, Popconfirm, message, Tag, Progress, Card, Statistic, Modal, Form } from 'antd'
 import {
   UploadOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
   ShareAltOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons'
 import useFileStore from '@/store/useFileStore'
 import type { MyDocument } from '@/types'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { useNavigate } from 'react-router-dom'
 import ShareModal from './components/ShareModal'
+import { fileAPI } from '@/services/api/file'
+import { type DocumentVersion } from '@/types/file'
+import { formatDate } from '@/utils/day'
 
 const { Search } = Input
 
@@ -30,7 +34,50 @@ function FileManager() {
   const {upload,uploading,progress} = useFileUpload()
   const [shareModalVisible, setShareModalVisible] = useState(false)
   const [selectedDocument, setSelectedDocument] = useState<MyDocument | null>(null)
+  const [editModalVisible, setEditModalVisible] = useState(false)
+  const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [versionsLoading, setVersionsLoading] = useState(false)
+  const [form] = Form.useForm()
 
+  const handleOpenEditModal = async (document: MyDocument) => {
+    setSelectedDocument(document)
+    form.setFieldsValue({ title: document.title })
+    setVersionsLoading(true)
+    try {
+      const response = await fileAPI.getDocumentVersions(document.id)
+      setVersions(response.data.data || [])
+    } catch {
+      setVersions([])
+    } finally {
+      setVersionsLoading(false)
+    }
+    setEditModalVisible(true)
+  }
+
+  const handleUpdateTitle = async () => {
+    if (!selectedDocument) return
+    try {
+      const values = await form.validateFields()
+      await fileAPI.update(selectedDocument.id, { title: values.title })
+      message.success('文件名修改成功')
+      setEditModalVisible(false)
+      fetchODocuments()
+    } catch {
+      message.error('修改失败')
+    }
+  }
+
+  const handleRevertVersion = async (versionId: number) => {
+    if (!selectedDocument) return
+    try {
+      await fileAPI.revertToVersion(selectedDocument.id, versionId)
+      message.success('版本回溯成功')
+      setEditModalVisible(false)
+      fetchODocuments()
+    } catch {
+      message.error('回溯失败')
+    }
+  }
   const docList = Array.isArray(ODocuments) ? ODocuments : []
   useEffect(() => {
     fetchODocuments()
@@ -110,7 +157,7 @@ function FileManager() {
       render: (_: unknown, record: MyDocument) => (
         <Space size="middle">
           <Button type="text" icon={<EyeOutlined />} onClick={() => { navigate(`/documents/${record.id}/preview`); }}> 查看</Button>
-          <Button type="text" icon={<EditOutlined />}>编辑</Button>
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleOpenEditModal(record)}>编辑</Button>
            <Button type="text" icon={<ShareAltOutlined />} onClick={() => { setSelectedDocument(record); setShareModalVisible(true); }}>共享</Button>
           <Popconfirm
             title={`确定删除文件 "${record.title}" 吗？`}
@@ -132,6 +179,72 @@ function FileManager() {
         onCancel={() => setShareModalVisible(false)}
         document={selectedDocument}
       />
+
+      <Modal
+        title="编辑文档"
+        open={editModalVisible}
+        onOk={handleUpdateTitle}
+        onCancel={() => {
+          setEditModalVisible(false)
+          form.resetFields()
+        }}
+        okText="保存修改"
+        cancelText="取消"
+        width={700}
+      >
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-medium mb-3">修改文件名</h3>
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="title"
+                rules={[{ required: true, message: '请输入文件名' }]}
+              >
+                <Input placeholder="请输入文件名" />
+              </Form.Item>
+            </Form>
+          </div>
+
+          <div>
+            <h3 className="font-medium mb-3">版本历史</h3>
+            {versionsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+              </div>
+            ) : versions.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">暂无版本记录</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {versions.map((version) => (
+                  <div
+                    key={version.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Tag>V{version.version_number}</Tag>
+                        <span className="font-medium">{version.filename}</span>
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1">
+                        {formatFileSize(version.filesize)} - {formatDate(version.created_at)}
+                      </div>
+                    </div>
+                    <Button
+                      type="primary"
+                      ghost
+                      icon={<HistoryOutlined />}
+                      onClick={() => handleRevertVersion(version.id)}
+                    >
+                      回溯
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+
       {/* 顶部操作栏 */}
       <div className="flex items-center justify-between mb-6">
         <div>

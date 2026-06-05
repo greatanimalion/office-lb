@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Tabs, Card } from 'antd'
+import { Button, Tabs } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import { GroupFiles } from './GroupFiles'
@@ -11,16 +11,15 @@ interface GroupDetailProps {
 }
 
 export function GroupDetail({ groupId, onBack }: GroupDetailProps) {
-  const { currentGroup } = useGroupStore()
+  const { currentGroup,clearPathFolder } = useGroupStore()
   const [activeTab, setActiveTab] = useState('files')
-
   return (
     <div className="h-full flex flex-col">
         <div className="flex   justify-between">
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
-            onClick={onBack}
+            onClick={()=>{onBack();clearPathFolder()}}
           >
             返回
           </Button>

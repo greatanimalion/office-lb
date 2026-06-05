@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Button, Modal, Form, Input, message, Avatar, Popconfirm, Empty, Table, Space } from 'antd'
+import { Button, Modal, Form, Input, message, Avatar, Popconfirm, Empty, Table, Space } from 'antd'
 import { PlusOutlined, TeamOutlined, FileTextOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import type { Group } from '@/types'
@@ -146,7 +146,6 @@ function Workspace() {
         </Button>
       </div>
 
-      <Card className="flex-1">
         {groups.length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -166,8 +165,6 @@ function Workspace() {
             className="h-full"
           />
         )}
-      </Card>
-
       <Modal
         title="创建工作组"
         open={isModalOpen}

@@ -1,33 +1,42 @@
 import { create } from 'zustand'
-import type { Group, GroupMember, GroupDocument } from '../types'
+import type { Group, GroupMember } from '../types'
 import { groupAPI } from '../services/api/group'
 import type { Folder } from '@/types/file'
+import { fileAPI } from '@/services/api/file'
+import type { MyDocument } from '@/types/file'
 
 interface GroupState {
   groups: Group[]
   currentGroup: Group | null
   members: GroupMember[]
-  documents: GroupDocument[]
+  documents: MyDocument[]
   loading: boolean
   folders: Folder[]
-  currentFolder: Folder | null
-  getFolders: (groupId?: number, parentFolderId?: number) => Promise<void>
+  pathFolder: Folder[]
+  getFolders: () => Promise<void>
   fetchGroups: () => Promise<void>
   fetchMembers: (groupId: number) => Promise<void>
   createGroup: (data: { name: string; description?: string }) => Promise<Group | null>
   deleteGroup: (id: number) => Promise<boolean>
+  getDocuments: () => Promise<void>
+  pushPath: (folder: Folder) => void
+  popPath: () => void
+  clearPathFolder:()=>void
   setCurrentGroup: (group: Group | null) => void
 }
 
 const useGroupStore = create<GroupState>((set, get) => ({
   groups: [],
   currentGroup: null,
+  pathFolder: [],
   members: [],
   documents: [],
   folders: [],
   loading: false,
   currentFolder: null,
-
+  clearPathFolder:()=>{
+    set({pathFolder:[]})
+  },
   fetchGroups: async () => {
     set({ loading: true })
     try {
@@ -65,12 +74,36 @@ const useGroupStore = create<GroupState>((set, get) => ({
       return false
     }
   },
-  getFolders: async (groupId?: number, parentFolderId?: number) => {
+  getFolders: async () => {
     try {
+      const groupId = get().currentGroup.id
+      const pathfolder=get().pathFolder
+      const parentFolderId = pathfolder[pathfolder.length-1]?.id||undefined
       const response = await groupAPI.getFolders(groupId, parentFolderId)
       set({ folders: response.data })
-    } catch {
+    } catch(error) {
       set({ folders: [] })
+    }
+  },
+  pushPath: (folder: Folder) => {
+    set({ pathFolder: [...get().pathFolder, folder] })
+    get().getDocuments()
+    get().getFolders()
+  },
+  popPath: () => {
+    set({ pathFolder: get().pathFolder.slice(0, -1) })
+    get().getDocuments()
+    get().getFolders()
+  },
+  getDocuments: async () => {
+    try {
+      const pathFolder=get().pathFolder
+      const owner_type =pathFolder.length==0?'group':'folder'
+      const owner_id = pathFolder.length==0 ? get().currentGroup.id : pathFolder[pathFolder.length-1].id
+      const response = await fileAPI.list({ page: 1, pageSize: 100, owner_id, owner_type })
+      set({ documents: response.data.data || [] })
+    } catch {
+      set({ documents: [] })
     }
   },
   setCurrentGroup: (group: Group | null) => {

@@ -1,14 +1,16 @@
 import { create } from 'zustand'
 import type { User, LoginData, RegisterData } from '../types'
 import { authAPI } from '../services/api/auth'
+import { message } from 'antd'
 
 interface UserState {
   user: User | null
   token: string | null
   isAuthenticated: boolean
-  login: (data: LoginData) => Promise<void>
+  login: (data: LoginData) => Promise<boolean>
   register: (data: RegisterData) => Promise<{success: boolean, message: string}>
   logout: () => void
+  changeGroup: (groupId:number) => Promise<void>
   fetchProfile: () => Promise<void>
   setUser: (user: User) => void
 }
@@ -17,13 +19,28 @@ const useUserStore = create<UserState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
+  changeGroup: async (groupId:number) => {
+    const res=await authAPI.changeGroup(groupId)
+    if(res.data.success){
+      message.success(res.data.message)
+      set((state) => ({ user: { ...state.user!, group_id:groupId } as any }))
+      localStorage.setItem('user', JSON.stringify({...JSON.parse(localStorage.getItem('user') || 'null'), group_id:groupId}))
+    }else{
+      message.error(res.data.message)
+    }
+  },
 
-  login: async (data: LoginData) => {
+  login: async (data: LoginData): Promise<boolean> => {
     const response = await authAPI.login(data)
-    const { token='1', user='1' } = response.data||{}
+    const { token, user } = response.data||{}
+    if(!token || !user){ 
+      message.error(response.data.message)
+      return false
+    }
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(user))
     set({ token, user: user as any, isAuthenticated: true })
+    return true
   },
 
   register: async (data: RegisterData) => {

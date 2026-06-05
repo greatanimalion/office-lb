@@ -1,9 +1,12 @@
 import request from '../request'
-import type { LoginData, RegisterData, LoginResponse, User } from '../../types'
+import type { LoginData, RegisterData, LoginResponse, User } from '@/types'
 
 export const authAPI = {
   login: (data: LoginData) => request.post<LoginResponse>('/api/auth/login', data),
-
+  changeGroup: (groupId:number) => request.post<{
+    success: boolean
+    message: string
+  }>('/api/auth/user/change-group', {groupId}),
   register: (data: RegisterData) => request.post<{
     success: boolean
     message: string

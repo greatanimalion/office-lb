@@ -22,8 +22,3 @@ export interface GroupMember {
   role: 'owner' | 'admin' | 'member'
   createdAt: string
 }
-
-export interface GroupDocument extends MyDocument {
-  uploaderId: number
-  uploaderName: string
-}
