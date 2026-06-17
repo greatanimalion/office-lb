@@ -9,12 +9,23 @@ export default defineConfig({
     // babel({ presets: [reactCompilerPreset()] }),
     tailwindcss()
   ],
-
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            return 'vendor'
+          }
+        },
+      },
+    },
+  },
   server: {
-    port: 3001,
+    port: 30012,
+    host: '192.168.2.126',
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
       },

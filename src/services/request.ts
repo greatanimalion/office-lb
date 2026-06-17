@@ -30,7 +30,7 @@ request.interceptors.response.use(
       localStorage.removeItem('user')
       window.location.href = '/login'
     }
-    message.error(getErrorMessage(error.status))
+    // message.error(getErrorMessage(error.status))
     return error
   },
 )

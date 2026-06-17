@@ -208,7 +208,7 @@ function MainLayout() {
             </Dropdown>
             <Dropdown menu={{ items: userMenuItems }} trigger={['hover', 'click']}>
               <div className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg transition-colors">
-                <Avatar size={32} icon={<UserOutlined />} className="bg-blue-500" />
+                <Avatar src={user?.avatar} size={32} icon={<UserOutlined />} className="bg-blue-500" />
                 <span className="text-sm text-gray-700">{user?.username}</span>
               </div>
             </Dropdown>

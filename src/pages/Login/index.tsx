@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Form, Input, Button, Checkbox, Card, Tabs, Modal, message } from 'antd'
 import { CheckCircleOutlined } from '@ant-design/icons'
 import { useAuth } from '@/hooks/useAuth'
@@ -7,6 +7,7 @@ import dingtalkIcon from '@/assets/icons/dingtalk.svg'
 import weixinIcon from '@/assets/icons/weixin.svg'
 import CaptchaCanvas from './components/captchaCanvas'
 import { authAPI } from '@/services/api/auth'
+import { Link } from 'react-router-dom'
 function generateCaptchaText() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz0123456789'
   let result = ''
@@ -22,7 +23,13 @@ function LoginPage() {
   const [captchaInput, setCaptchaInput] = useState('')
   const [showCaptchaModal, setShowCaptchaModal] = useState(false)
   const [form] = Form.useForm()
-  const { handleLogin, handleRegister } = useAuth()
+  const { handleLogin, handleRegister,handleOtherLogin } = useAuth()
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    localStorage.setItem('token', token)
+    handleOtherLogin()
+  }, [])
 
   const handleSubmit = async () => {
     try {
@@ -31,9 +38,9 @@ function LoginPage() {
         await handleLogin(values.email, values.password)
       } else {
         const res = await handleRegister(values.username, values.email, values.password, values.captcha)
-        if(res.success){
+        if (res.success) {
           message.success(res.message)
-        }else{
+        } else {
           message.error(res.message)
         }
       }
@@ -52,10 +59,10 @@ function LoginPage() {
     if (captchaInput.toLowerCase() === modalCaptcha.toLowerCase()) {
       form.setFieldsValue({ captcha: captchaInput })
       setShowCaptchaModal(false)
-      const res=await authAPI.sendEmail(form.getFieldValue('email'))
-      if(res.data.success){
+      const res = await authAPI.sendEmail(form.getFieldValue('email'))
+      if (res.data.success) {
         message.success(res.data.message)
-      }else{
+      } else {
         message.error(res.data.message)
       }
       setCaptchaInput('')
@@ -150,13 +157,13 @@ function LoginPage() {
                 <div className="border-t border-gray-200 pt-4">
                   <p className="text-center text-gray-400 text-sm mb-3">其他方式</p>
                   <div className="flex gap-2">
-                    <Button icon={<img src={gitlabIcon} alt="GitLab" />}>
-                      GitLab登录
+                    <Button icon={<img src={gitlabIcon} alt="GitLab" />} onClick={() => authAPI.gitlabLogin()}>
+                      <Link to='http://192.168.2.126:3001/api/oauth/gitlab'>GitLab登录</Link>
                     </Button>
-                    <Button icon={<img src={dingtalkIcon} alt="DingTalk" />}>
+                    <Button icon={<img src={dingtalkIcon} alt="DingTalk" />} onClick={() => authAPI.dingtalkLogin()}>
                       钉钉登录
                     </Button>
-                    <Button icon={<img src={weixinIcon} alt="Weixin" />}>
+                    <Button icon={<img src={weixinIcon} alt="Weixin" />} onClick={() => authAPI.weixinLogin()}>
                       微信登录
                     </Button>
                   </div>
@@ -192,7 +199,7 @@ function LoginPage() {
                   <Input
                     placeholder="验证码"
                     size="large"
-                  
+
                   />
                   <Button
                     type="primary"
@@ -224,13 +231,13 @@ function LoginPage() {
                 <div className="border-t border-gray-200 pt-4">
                   <p className="text-center text-gray-400 text-sm mb-3">其他方式</p>
                   <div className="flex gap-2">
-                    <Button icon={<img src={gitlabIcon} alt="GitLab" />}>
+                    <Button icon={<img src={gitlabIcon} alt="GitLab" />} onClick={() => handleLogin('', '', 1)}>
                       GitLab登录
                     </Button>
-                    <Button icon={<img src={dingtalkIcon} alt="DingTalk" />}>
+                    <Button icon={<img src={dingtalkIcon} alt="DingTalk" />} onClick={() => handleLogin('', '', 2)}>
                       钉钉登录
                     </Button>
-                    <Button icon={<img src={weixinIcon} alt="Weixin" />}>
+                    <Button icon={<img src={weixinIcon} alt="Weixin" />} onClick={() => handleLogin('', '', 3)}>
                       微信登录
                     </Button>
                   </div>

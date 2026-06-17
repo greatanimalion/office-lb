@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb } from 'antd'
+import {   Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb } from 'antd'
 import {
   DeleteOutlined,
   FolderOutlined,
@@ -16,7 +16,6 @@ import { PermissionType } from '@/types'
 import { formatFileSize } from '@/utils/file'
 import { permissonToBinary } from '@/utils/permission'
 import type { Folder } from '@/types/file'
-import type { ColumnsType } from 'antd/es/table'
 import { fileAPI } from '@/services/api/file'
 
 const permissionOptions: { value: PermissionType; label: string }[] = [

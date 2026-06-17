@@ -22,7 +22,7 @@ export interface RouteConfig {
 }
 
 export const publicRoutes: RouteConfig[] = [
-  { path: '/login', element: <Login />, isPublic: true },
+  { path: '/login/:token?', element: <Login />, isPublic: true },
   { path: '/s/:token', element: <ShareLink />, isPublic: true },
 ]
 

@@ -13,6 +13,7 @@ interface UserState {
   changeGroup: (groupId:number) => Promise<void>
   fetchProfile: () => Promise<void>
   setUser: (user: User) => void
+  otherLogin: () => Promise<boolean>
 }
 
 const useUserStore = create<UserState>((set) => ({
@@ -42,7 +43,22 @@ const useUserStore = create<UserState>((set) => ({
     set({ token, user: user as any, isAuthenticated: true })
     return true
   },
-
+  otherLogin: async () => {
+    const res=await authAPI.getSocialAccount()
+    if(res.provider){
+      const token=localStorage.getItem('token') || ''
+      set({ token, user: {
+        id: res.id,
+        username: JSON.parse(res.profileData).username,
+        email: res.email,
+        provider: res.provider,
+        provider_id: res.provider_id,
+        avatar: res.avatar,
+      }, isAuthenticated: true })
+      return true
+    }
+      return false
+  },
   register: async (data: RegisterData) => {
     const res=await authAPI.register(data)
     return res.data||{success: false, message: '未知错误'}

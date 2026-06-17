@@ -2,6 +2,8 @@ export interface User {
   id: number
   username: string
   email: string
+  provider?: string
+  provider_id?: string
   avatar?: string
   group_id?: number
   role?: 'admin' | 'user'
@@ -11,6 +13,7 @@ export interface User {
 export interface LoginData {
   email: string
   password: string
+  type?:1|2|3
 }
 
 export interface RegisterData {

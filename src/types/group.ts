@@ -1,5 +1,4 @@
 import type { User } from './user'
-import type { MyDocument } from './file'
 
 export interface Group {
   id: number

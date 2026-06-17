@@ -5,15 +5,22 @@ import { toBase64 } from '@/utils'
 
 export function useAuth() {
   const navigate = useNavigate()
-  const { user, isAuthenticated, login, register, logout, changeGroup } = useUserStore()
+  const { user, isAuthenticated, login, register, logout, changeGroup,otherLogin } = useUserStore()
 
-  const handleLogin = useCallback(async (email: string, password: string) => {
-      const hasLogin = await login({ email, password: toBase64(password) })
+  const handleLogin = useCallback(async (email: string, password: string,type?:1|2|3) => {
+      const hasLogin = await login({ email, password: toBase64(password),type })
       if(hasLogin){
         navigate('/', { replace: true })
       }
   }, [login, navigate])
 
+  const handleOtherLogin = useCallback(async () => {
+    const hasLogin = await otherLogin()
+     if(hasLogin){
+        navigate('/', { replace: true })
+      }
+  }, [otherLogin])
+  
   const handleRegister = useCallback(async (username: string, email: string, password: string, code: string) => {
     const res = await register({ username, email, password: toBase64(password), code })
     return res
@@ -37,5 +44,6 @@ export function useAuth() {
     handleRegister,
     handleLogout,
     handleChangeGroup,
+    handleOtherLogin,
   }
 }

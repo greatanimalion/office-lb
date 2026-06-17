@@ -21,7 +21,7 @@ const useFileStore = create<FileState>((set, get) => ({
   fetchODocuments: async (params: { page: number; pageSize: number }={page:1,pageSize:10}) => {
     set({ loading: true })
     try {
-      const userId = JSON.parse(localStorage.getItem('user')).id
+      const userId = JSON.parse(localStorage.getItem('user') || '{}').id
       const response = await fileAPI.list({ ...params, owner_id: userId, owner_type: 'user' })
       set({ ODocuments: response.data.data || [] })
     } finally {
