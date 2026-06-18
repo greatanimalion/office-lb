@@ -12,6 +12,7 @@ interface UserState {
   logout: () => void
   changeGroup: (groupId:number) => Promise<void>
   fetchProfile: () => Promise<void>
+  updateUser: (user: User) => Promise<void>
   setUser: (user: User) => void
   otherLogin: () => Promise<boolean>
 }
@@ -30,7 +31,16 @@ const useUserStore = create<UserState>((set) => ({
       message.error(res.data.message)
     }
   },
-
+  updateUser: async (user: User) => {
+    const res=await authAPI.updateUser(user)
+    if(res.data.success){
+      message.success(res.data.message)
+      set((state) => ({ user: { ...state.user!, ...user } as any }))
+      localStorage.setItem('user', JSON.stringify({...JSON.parse(localStorage.getItem('user') || 'null'), ...user}))
+    }else{
+      message.error(res.data.message)
+    }
+  },
   login: async (data: LoginData): Promise<boolean> => {
     const response = await authAPI.login(data)
     const { token, user } = response.data||{}

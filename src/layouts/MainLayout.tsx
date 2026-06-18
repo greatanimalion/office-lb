@@ -31,6 +31,7 @@ import useUserStore from '../store/useUserStore'
 import useGlobalStore from '../store/useGlobalStore'
 import useGroupStore from '../store/useGroupStore'
 import { GroupSwitchModal } from './components/GroupSwitchModal'
+import { ProfileModal } from './components/ProfileModal'
 import logo from '@/assets/images/office.png'
 import { useTheme } from '@/hooks/useTheme'
 import { useState, useEffect } from 'react'
@@ -57,6 +58,7 @@ function MainLayout() {
   const { mode, effectiveTheme, changeMode } = useTheme();
   const { groups, fetchGroups, currentGroup } = useGroupStore()
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   useEffect(() => {
     fetchGroups()
@@ -80,7 +82,7 @@ function MainLayout() {
   }
 
   const userMenuItems = [
-    { key: 'profile', icon: <UserOutlined />, label: '个人中心' },
+    { key: 'profile', icon: <UserOutlined />, label: '个人中心', onClick: () => setIsProfileModalOpen(true) },
     { key: 'settings', icon: <SettingOutlined />, label: '设置' },
     { key: 'changeGroup', icon:<UsergroupDeleteOutlined />, label: '切换组', onClick: handleChangeGroup },
     { type: 'divider' as const },
@@ -243,6 +245,10 @@ function MainLayout() {
         createdGroups={createdGroups}
         joinedGroups={joinedGroups}
         currentGroupId={currentGroup?.id}
+      />
+      <ProfileModal
+        open={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </ConfigProvider>
   )
