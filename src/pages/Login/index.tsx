@@ -27,8 +27,10 @@ function LoginPage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
-    localStorage.setItem('token', token)
-    handleOtherLogin()
+    if(token){
+      localStorage.setItem('token', token)
+      handleOtherLogin()
+    }
   }, [])
 
   const handleSubmit = async () => {

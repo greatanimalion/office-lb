@@ -8,9 +8,9 @@ interface UserState {
   token: string | null
   isAuthenticated: boolean
   login: (data: LoginData) => Promise<boolean>
-  register: (data: RegisterData) => Promise<{success: boolean, message: string}>
+  register: (data: RegisterData) => Promise<{ success: boolean, message: string }>
   logout: () => void
-  changeGroup: (groupId:number) => Promise<void>
+  changeGroup: (groupId: number) => Promise<void>
   fetchProfile: () => Promise<void>
   updateUser: (user: User) => Promise<void>
   setUser: (user: User) => void
@@ -21,30 +21,30 @@ const useUserStore = create<UserState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
-  changeGroup: async (groupId:number) => {
-    const res=await authAPI.changeGroup(groupId)
-    if(res.data.success){
+  changeGroup: async (groupId: number) => {
+    const res = await authAPI.changeGroup(groupId)
+    if (res.data.success) {
       message.success(res.data.message)
-      set((state) => ({ user: { ...state.user!, group_id:groupId } as any }))
-      localStorage.setItem('user', JSON.stringify({...JSON.parse(localStorage.getItem('user') || 'null'), group_id:groupId}))
-    }else{
+      set((state) => ({ user: { ...state.user!, group_id: groupId } as any }))
+      localStorage.setItem('user', JSON.stringify({ ...JSON.parse(localStorage.getItem('user') || 'null'), group_id: groupId }))
+    } else {
       message.error(res.data.message)
     }
   },
   updateUser: async (user: User) => {
-    const res=await authAPI.updateUser(user)
-    if(res.data.success){
+    const res = await authAPI.updateUser(user)
+    if (res.data.success) {
       message.success(res.data.message)
       set((state) => ({ user: { ...state.user!, ...user } as any }))
-      localStorage.setItem('user', JSON.stringify({...JSON.parse(localStorage.getItem('user') || 'null'), ...user}))
-    }else{
+      localStorage.setItem('user', JSON.stringify({ ...JSON.parse(localStorage.getItem('user') || 'null'), ...user }))
+    } else {
       message.error(res.data.message)
     }
   },
   login: async (data: LoginData): Promise<boolean> => {
     const response = await authAPI.login(data)
-    const { token, user } = response.data||{}
-    if(!token || !user){ 
+    const { token, user } = response.data || {}
+    if (!token || !user) {
       message.error(response.data.message)
       return false
     }
@@ -54,24 +54,29 @@ const useUserStore = create<UserState>((set) => ({
     return true
   },
   otherLogin: async () => {
-    const res=await authAPI.getSocialAccount()
-    if(res.provider){
-      const token=localStorage.getItem('token') || ''
-      set({ token, user: {
-        id: res.id,
-        username: JSON.parse(res.profileData).username,
-        email: res.email,
-        provider: res.provider,
-        provider_id: res.provider_id,
-        avatar: res.avatar,
-      }, isAuthenticated: true })
+    const res = await authAPI.getSocialAccount()
+    if (res.user.provider) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      if (!token) return false
+      localStorage.setItem('token', token)
+      set({
+        token, user: {
+          id: res.user.id,
+          username: res.user.username,
+          email: res.user.email,
+          provider: res.user.provider,
+          provider_id: res.user.provider_id,
+          avatar: res.user.avatar,
+        }, isAuthenticated: true
+      })
       return true
     }
-      return false
+    return false
   },
   register: async (data: RegisterData) => {
-    const res=await authAPI.register(data)
-    return res.data||{success: false, message: '未知错误'}
+    const res = await authAPI.register(data)
+    return res.data || { success: false, message: '未知错误' }
   },
 
   logout: () => {

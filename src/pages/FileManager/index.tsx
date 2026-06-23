@@ -314,6 +314,8 @@ function FileManager() {
       </div>
 
       {/* 文档列表 */}
+      <div className="overflow-auto h-[calc(100vh-350px)]">
+
         <Table
           columns={columns}
           dataSource={docList}
@@ -328,7 +330,7 @@ function FileManager() {
           bordered={false}
           className="w-full"
         />
-
+    </div>
     </div>
   )
 }

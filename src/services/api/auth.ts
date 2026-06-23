@@ -3,7 +3,10 @@ import type { LoginData, RegisterData, LoginResponse, User } from '@/types'
 
 export const authAPI = {
   login: (data: LoginData) => request.post<LoginResponse>('/api/auth/login', data),
-  getSocialAccount: () => request.post<User&{profileData:string}>('/api/auth/user/socialAccount').then(res => res.data),
+  getSocialAccount: () => request.post<{
+    success: boolean
+    user: User
+  }>('/api/auth/user/socialAccount').then(res => res.data),
   gitlabLogin: () => request.get<LoginResponse>('/api/oauth/gitlab', {}),
   dingtalkLogin: () => request.get<LoginResponse>('/api/oauth/dingtalk', {}),
   weixinLogin: () => request.get<LoginResponse>('/api/oauth/weixin', {}),

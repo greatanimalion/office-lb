@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import {   Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb } from 'antd'
+import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb } from 'antd'
 import {
   DeleteOutlined,
   FolderOutlined,
@@ -7,6 +7,8 @@ import {
   UploadOutlined,
   FileTextOutlined,
   ArrowLeftOutlined,
+  SearchOutlined,
+  EyeOutlined,
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import useFileStore from '@/store/useFileStore'
@@ -15,8 +17,9 @@ import { formatDate } from '@/utils/day'
 import { PermissionType } from '@/types'
 import { formatFileSize } from '@/utils/file'
 import { permissonToBinary } from '@/utils/permission'
-import type { Folder } from '@/types/file'
+import type { Folder, MyDocument } from '@/types/file'
 import { fileAPI } from '@/services/api/file'
+const { Search } = Input
 
 const permissionOptions: { value: PermissionType; label: string }[] = [
   { value: PermissionType.VIEW, label: '查看' },
@@ -34,7 +37,7 @@ interface GroupFilesProps {
 }
 
 export function GroupFiles({ groupId }: GroupFilesProps) {
-  const { getFolders, folders,documents,getDocuments ,pushPath,popPath,pathFolder} = useGroupStore()
+  const { getFolders, folders, documents, getDocuments, pushPath, popPath, pathFolder } = useGroupStore()
   const { fetchODocuments, ODocuments } = useFileStore()
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -81,9 +84,9 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
         name: values.name,
         permissions: values.permissions || []
       }
-      const permisson=permissonToBinary(folderData.permissions)
-      if(permisson==0)return message.error('权限不能为空')
-      await groupAPI.createFolder(groupId, permisson, folderData.name, pathFolder[pathFolder.length-1]?.id)
+      const permisson = permissonToBinary(folderData.permissions)
+      if (permisson == 0) return message.error('权限不能为空')
+      await groupAPI.createFolder(groupId, permisson, folderData.name, pathFolder[pathFolder.length - 1]?.id)
       message.success('文件夹创建成功')
       setIsCreateModalOpen(false)
       form.resetFields()
@@ -93,6 +96,10 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
     }
   }
 
+
+  function handleViewDocument(doc: MyDocument): void {
+    throw new Error('Function not implemented.')
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -116,6 +123,13 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           </Breadcrumb>
         </div>
         <div className="flex gap-2">
+          <Search
+            placeholder="搜索..."
+            allowClear
+            enterButton={<SearchOutlined />}
+            style={{ width: 280 }}
+            size="middle"
+          />
           <Button
             type="dashed"
             icon={<UploadOutlined />}
@@ -167,7 +181,6 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
                 <Button
                   type="text"
                   icon={<EditOutlined />}
-                  onClick={() => { }}
                 >
                   编辑
                 </Button>
@@ -203,8 +216,15 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
               <Space>
                 <Button
                   type="text"
+                  icon={<EyeOutlined />}
+                  onClick={() => window.open(`/documents/${doc.id}/edit`, '_blank')}
+                >
+                  查看
+                </Button>
+                <Button
+                  type="text"
                   icon={<EditOutlined />}
-                  onClick={() => { }}
+                  onClick={() => {}}
                 >
                   编辑
                 </Button>
@@ -256,10 +276,10 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
             return
           }
           try {
-            const currentFolder=pathFolder[pathFolder.length-1]
+            const currentFolder = pathFolder[pathFolder.length - 1]
             for (const docId of selectedDocIds) {
-              const owner_type=currentFolder?"folder":"group"
-              await fileAPI.upLoadToGroup(docId,currentFolder?currentFolder.id:groupId,owner_type)
+              const owner_type = currentFolder ? "folder" : "group"
+              await fileAPI.upLoadToGroup(docId, currentFolder ? currentFolder.id : groupId, owner_type)
             }
             await getDocuments()
             message.success('文档上传成功')

@@ -118,7 +118,7 @@ function MainLayout() {
       icon: <FileTextOutlined />,
       label: '文档管理',
       children: [
-        { key: '/files', icon: <FileTextOutlined />, label: '文档列表', onClick: () => navigate('/files') },
+        { key: '/files', icon: <FileTextOutlined />, label: '私有文档', onClick: () => navigate('/files') },
         { key: '/shared', icon: <ShareAltOutlined />, label: '共享文档', onClick: () => navigate('/shared') },
       ],
     },
@@ -209,9 +209,9 @@ function MainLayout() {
               <Button type="text" icon={<BgColorsOutlined />} />
             </Dropdown>
             <Dropdown menu={{ items: userMenuItems }} trigger={['hover', 'click']}>
-              <div className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg transition-colors">
+              <div className="flex items-center gap-2 cursor-pointer px-2 py-1 rounded-lg transition-colors" >
                 <Avatar src={user?.avatar} size={32} icon={<UserOutlined />} className="bg-blue-500" />
-                <span className="text-sm text-gray-700">{user?.username}</span>
+                <span className="text-sm ">{user?.username}</span>
               </div>
             </Dropdown>
           </div>
