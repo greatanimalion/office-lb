@@ -6,9 +6,12 @@ import {
   EditOutlined,
   UploadOutlined,
   FileTextOutlined,
+  FileWordOutlined,
+  FilePdfOutlined,
   ArrowLeftOutlined,
   SearchOutlined,
   EyeOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import useFileStore from '@/store/useFileStore'
@@ -18,6 +21,7 @@ import { PermissionType } from '@/types'
 import { formatFileSize } from '@/utils/file'
 import { permissonToBinary } from '@/utils/permission'
 import type { Folder, MyDocument } from '@/types/file'
+import type { DocumentVersion } from '@/types/file'
 import { fileAPI } from '@/services/api/file'
 const { Search } = Input
 
@@ -35,15 +39,57 @@ const permissionOptions: { value: PermissionType; label: string }[] = [
 interface GroupFilesProps {
   groupId: number
 }
-
+const getFileIcon = (title: string) => {
+  const ext = title.split('.').pop()?.toLowerCase()
+  switch (ext) {
+    case 'doc':
+    case 'docx':
+      return <FileWordOutlined className="text-blue-600 text-xl" />
+    case 'pdf':
+      return <FilePdfOutlined className="text-red-500 text-xl" />
+    default:
+      return <FileTextOutlined className="text-gray-400 text-xl" />
+  }
+}
 export function GroupFiles({ groupId }: GroupFilesProps) {
-  const { getFolders, folders, documents, getDocuments, pushPath, popPath, pathFolder } = useGroupStore()
+  const { getFolders, folders, documents, refreshDocuments, pushPath, popPath, pathFolder } = useGroupStore()
   const { fetchODocuments, ODocuments } = useFileStore()
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [selectedDocIds, setSelectedDocIds] = useState<number[]>([])
   const [form] = Form.useForm()
+  const [versionModalVisible, setVersionModalVisible] = useState(false)
+  const [versions, setVersions] = useState<DocumentVersion[]>([])
+  const [versionsLoading, setVersionsLoading] = useState(false)
+  const [selectedDoc, setSelectedDoc] = useState<MyDocument | null>(null)
+
+  const handleOpenVersionModal = async (doc: MyDocument) => {
+    setSelectedDoc(doc)
+    setVersionsLoading(true)
+    try {
+      const response = await fileAPI.getDocumentVersions(doc.id)
+      setVersions(response.data.data || [])
+    } catch {
+      setVersions([])
+    } finally {
+      setVersionsLoading(false)
+    }
+    setVersionModalVisible(true)
+  }
+
+  const handleRevertVersion = async (versionId: number, v: number) => {
+    if (!selectedDoc) return
+    try {
+      const response = await fileAPI.revertToVersion(selectedDoc.id, versionId)
+      if (!response.data.success) return message.error(response.data.message || '回溯失败')
+      message.success('版本回溯成功')
+      refreshDocuments()
+      setVersionModalVisible(false)
+    } catch {
+      message.error('回溯失败')
+    }
+  }
 
   const handleOpenUploadModal = async () => {
     await fetchODocuments()
@@ -54,12 +100,12 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
   useEffect(() => {
     setLoading(true)
     getFolders().finally(() => setLoading(false))
-    getDocuments()
+    refreshDocuments()
   }, [groupId, getFolders])
 
   const handleFolderClick = (folder: Folder) => {
     pushPath(folder)
-    getDocuments()
+    refreshDocuments()
     getFolders()
   }
 
@@ -94,11 +140,6 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
     } catch (error) {
       message.error('创建失败')
     }
-  }
-
-
-  function handleViewDocument(doc: MyDocument): void {
-    throw new Error('Function not implemented.')
   }
 
   return (
@@ -161,33 +202,29 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           {folders.map(folder => (
             <div
               key={folder.id}
-              className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between p-3  shadow-md  bg-white rounded-lg   transition-all cursor-pointer"
+              onClick={() => handleFolderClick(folder)}
             >
-              <div
-                className="flex items-center gap-3 flex-1 cursor-pointer"
-                onClick={() => handleFolderClick(folder)}
-              >
-                <FolderOutlined className="text-yellow-500 text-xl" />
+              <div className="flex items-center gap-3 flex-1">
+                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <FolderOutlined className="text-amber-500 text-xl" />
+                </div>
                 <div className="flex-1">
-                  <div className="font-medium text-blue-600 hover:text-blue-800">
+                  <div className="font-medium text-amber-800">
                     {folder.filename}
                   </div>
-                  <div className="text-sm text-gray-400 mt-1">
+                  <div className="text-sm text-amber-400/70 mt-0.5">
                     {formatDate(folder.createdAt)}
                   </div>
                 </div>
               </div>
-              <Space>
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                >
-                  编辑
-                </Button>
+              <Space onClick={(e) => e.stopPropagation()}>
+                <Button type="text" icon={<EditOutlined />} size="small">编辑</Button>
                 <Button
                   type="text"
                   danger
                   icon={<DeleteOutlined />}
+                  size="small"
                   onClick={() => handleDeleteDocument(folder.id)}
                 >
                   删除
@@ -195,53 +232,37 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
               </Space>
             </div>
           ))}
-
           {/* 文档列表 */}
-          {documents.map(doc => (
-            <div
-              key={doc.id}
-              className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3 flex-1">
-                <FileTextOutlined className="text-gray-400 text-xl" />
-                <div className="flex-1">
-                  <div className="font-medium">
-                    {doc.title}
+          {documents.map(doc => {
+            const icon = getFileIcon(doc.title)
+            return (
+              <div
+                key={doc.id}
+                className={`flex items-center justify-between p-3 bg-white shadow-md rounded-lg  transition-all`}
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                    {icon}
                   </div>
-                  <div className="text-sm text-gray-400 mt-1">
-                    {formatFileSize(doc.fileSize || 0)} - {formatDate(doc.created_at)}
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-800">
+                      {doc.title}
+                    </div>
+                    <div className="text-sm text-gray-400 mt-0.5">
+                      {formatFileSize(doc.fileSize || 0)} - {formatDate(doc.created_at)}
+                    </div>
                   </div>
                 </div>
+                <Space>
+                  <Button type="text" icon={<EyeOutlined />} size="small" onClick={() => window.open(`/documents/${doc.id}/edit`, '_blank')}>查看</Button>
+                  <Button type="text" icon={<HistoryOutlined />} size="small" onClick={() => handleOpenVersionModal(doc)}>版本回溯</Button>
+                  <Button type="text" danger icon={<DeleteOutlined />} size="small" onClick={() => handleDeleteDocument(doc.id)}>删除</Button>
+                </Space>
               </div>
-              <Space>
-                <Button
-                  type="text"
-                  icon={<EyeOutlined />}
-                  onClick={() => window.open(`/documents/${doc.id}/edit`, '_blank')}
-                >
-                  查看
-                </Button>
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  onClick={() => {}}
-                >
-                  编辑
-                </Button>
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={() => handleDeleteDocument(doc.id)}
-                >
-                  删除
-                </Button>
-              </Space>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
-
       <Modal
         title="创建文件夹"
         open={isCreateModalOpen}
@@ -281,7 +302,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
               const owner_type = currentFolder ? "folder" : "group"
               await fileAPI.upLoadToGroup(docId, currentFolder ? currentFolder.id : groupId, owner_type)
             }
-            await getDocuments()
+            await refreshDocuments()
             message.success('文档上传成功')
             setIsUploadModalOpen(false)
             setSelectedDocIds([])
@@ -327,6 +348,55 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
             notFoundContent: '无匹配数据',
           }}
         />
+      </Modal>
+
+      <Modal
+        title={`版本历史 - ${selectedDoc?.title || selectedDoc?.filename || ''}`}
+        open={versionModalVisible}
+        onCancel={() => {
+          setVersionModalVisible(false)
+          setVersions([])
+        }}
+        footer={null}
+        width={600}
+      >
+        {versionsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
+          </div>
+        ) : versions.length === 0 ? (
+          <Empty description="暂无版本记录" />
+        ) : (
+          <div className="space-y-3">
+            {versions.map((version) => (
+              <div
+                key={version.id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">V{version.version_number}</span>
+                    <span className="font-medium text-gray-800">{version.filename}</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-400">
+                    <span>{formatFileSize(version.filesize)}</span>
+                    <span>|</span>
+                    <span>{formatDate(version.created_at)}</span>
+                  </div>
+                </div>
+                {selectedDoc.version_number == version.version_number ? <Button type="text">当前版本</Button>: <Button
+                  type="primary"
+                  ghost
+                  icon={<HistoryOutlined />}
+                  size="small"
+                  onClick={() => handleRevertVersion(version.id, version.version_number)}
+                >
+                  回溯
+                </Button>}
+              </div>
+            ))}
+          </div>
+        )}
       </Modal>
     </div>
   )

@@ -115,6 +115,6 @@ export const fileAPI = {
     request.get<{ success: boolean, data: DocumentVersion[] }>(`/api/documents/${documentId}/versions`),
 
   revertToVersion: (documentId: number, versionId: number) =>
-    request.post(`/api/documents/${documentId}/versions/${versionId}/revert`),
+    request.post(`/api/documents/revert`,{documentId, versionId}),
 }
 

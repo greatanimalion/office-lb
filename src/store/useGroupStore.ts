@@ -18,7 +18,10 @@ interface GroupState {
   fetchMembers: (groupId: number) => Promise<void>
   createGroup: (data: { name: string; description?: string }) => Promise<Group | null>
   deleteGroup: (id: number) => Promise<boolean>
-  getDocuments: () => Promise<void>
+  /**
+   * 刷新文档列表
+  */
+  refreshDocuments: () => Promise<void>
   pushPath: (folder: Folder) => void
   popPath: () => void
   clearPathFolder:()=>void
@@ -87,15 +90,15 @@ const useGroupStore = create<GroupState>((set, get) => ({
   },
   pushPath: (folder: Folder) => {
     set({ pathFolder: [...get().pathFolder, folder] })
-    get().getDocuments()
+    get().refreshDocuments()
     get().getFolders()
   },
   popPath: () => {
     set({ pathFolder: get().pathFolder.slice(0, -1) })
-    get().getDocuments()
+    get().refreshDocuments()
     get().getFolders()
   },
-  getDocuments: async () => {
+  refreshDocuments: async () => {
     try {
       const pathFolder=get().pathFolder
       const owner_type =pathFolder.length==0?'group':'folder'
