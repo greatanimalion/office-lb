@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb } from 'antd'
+import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Tag } from 'antd'
 import {
   DeleteOutlined,
   FolderOutlined,
   EditOutlined,
   UploadOutlined,
-  FileTextOutlined,
-  FileWordOutlined,
-  FilePdfOutlined,
   ArrowLeftOutlined,
   SearchOutlined,
   EyeOutlined,
@@ -24,7 +21,8 @@ import type { Folder, MyDocument } from '@/types/file'
 import type { DocumentVersion } from '@/types/file'
 import { fileAPI } from '@/services/api/file'
 const { Search } = Input
-
+import {getFileIcon} from '@/components/common/fileICON'
+import DVersionList from '@/components/business/DVersionList'
 const permissionOptions: { value: PermissionType; label: string }[] = [
   { value: PermissionType.VIEW, label: '查看' },
   { value: PermissionType.DOWNLOAD, label: '下载' },
@@ -39,18 +37,7 @@ const permissionOptions: { value: PermissionType; label: string }[] = [
 interface GroupFilesProps {
   groupId: number
 }
-const getFileIcon = (title: string) => {
-  const ext = title.split('.').pop()?.toLowerCase()
-  switch (ext) {
-    case 'doc':
-    case 'docx':
-      return <FileWordOutlined className="text-blue-600 text-xl" />
-    case 'pdf':
-      return <FilePdfOutlined className="text-red-500 text-xl" />
-    default:
-      return <FileTextOutlined className="text-gray-400 text-xl" />
-  }
-}
+
 export function GroupFiles({ groupId }: GroupFilesProps) {
   const { getFolders, folders, documents, refreshDocuments, pushPath, popPath, pathFolder } = useGroupStore()
   const { fetchODocuments, ODocuments } = useFileStore()
@@ -65,30 +52,17 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
   const [selectedDoc, setSelectedDoc] = useState<MyDocument | null>(null)
 
   const handleOpenVersionModal = async (doc: MyDocument) => {
-    setSelectedDoc(doc)
     setVersionsLoading(true)
     try {
       const response = await fileAPI.getDocumentVersions(doc.id)
       setVersions(response.data.data || [])
+      setSelectedDoc({...doc, version_number: response.data.currentVersion||-1})
     } catch {
       setVersions([])
-    } finally {
-      setVersionsLoading(false)
-    }
+      setSelectedDoc(doc)
+    }  
+    setVersionsLoading(false)
     setVersionModalVisible(true)
-  }
-
-  const handleRevertVersion = async (versionId: number, v: number) => {
-    if (!selectedDoc) return
-    try {
-      const response = await fileAPI.revertToVersion(selectedDoc.id, versionId)
-      if (!response.data.success) return message.error(response.data.message || '回溯失败')
-      message.success('版本回溯成功')
-      refreshDocuments()
-      setVersionModalVisible(false)
-    } catch {
-      message.error('回溯失败')
-    }
   }
 
   const handleOpenUploadModal = async () => {
@@ -287,7 +261,6 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           </Form.Item>
         </Form>
       </Modal>
-
       <Modal
         title="上传文档到组"
         open={isUploadModalOpen}
@@ -300,7 +273,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
             const currentFolder = pathFolder[pathFolder.length - 1]
             for (const docId of selectedDocIds) {
               const owner_type = currentFolder ? "folder" : "group"
-              await fileAPI.upLoadToGroup(docId, currentFolder ? currentFolder.id : groupId, owner_type)
+              await fileAPI.upLoadTo(docId, currentFolder ? currentFolder.id : groupId, owner_type)
             }
             await refreshDocuments()
             message.success('文档上传成功')
@@ -368,33 +341,8 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           <Empty description="暂无版本记录" />
         ) : (
           <div className="space-y-3">
-            {versions.map((version) => (
-              <div
-                key={version.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">V{version.version_number}</span>
-                    <span className="font-medium text-gray-800">{version.filename}</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1.5 text-sm text-gray-400">
-                    <span>{formatFileSize(version.filesize)}</span>
-                    <span>|</span>
-                    <span>{formatDate(version.created_at)}</span>
-                  </div>
-                </div>
-                {selectedDoc.version_number == version.version_number ? <Button type="text">当前版本</Button>: <Button
-                  type="primary"
-                  ghost
-                  icon={<HistoryOutlined />}
-                  size="small"
-                  onClick={() => handleRevertVersion(version.id, version.version_number)}
-                >
-                  回溯
-                </Button>}
-              </div>
-            ))}
+            <DVersionList documentId={selectedDoc?.id || 0} cb={()=>{setVersionModalVisible(false)}} />
+         
           </div>
         )}
       </Modal>

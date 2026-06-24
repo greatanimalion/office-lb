@@ -43,4 +43,5 @@ export interface DocumentVersion {
   filepath: string
   created_by: number
   created_at: Date
+  alter_by_username?: string
 }

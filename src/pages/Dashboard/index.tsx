@@ -1,14 +1,18 @@
+
 import { Card, Statistic, Row, Col } from 'antd'
 import { FileTextOutlined, TeamOutlined, ShareAltOutlined, EyeOutlined } from '@ant-design/icons'
+import AllUserList from './components/AllUserList'
+import PublicDocumentList from './components/publicDocumemt'
 
 function Dashboard() {
+
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-6">仪表盘</h2>
-      <Row gutter={16}>
+    <div >
+      <h2 className="text-xl font-bold mb-6">仪表盘</h2> 
+      <Row gutter={16} className="mb-6">
         <Col span={6}>
           <Card>
-            <Statistic title="文档总数" value={0} prefix={<FileTextOutlined />} />
+            <Statistic title="文档总数" value={1} prefix={<FileTextOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
@@ -18,7 +22,7 @@ function Dashboard() {
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="在线用户" value={0} prefix={<TeamOutlined />} />
+            <Statistic title="在线用户" value={1} prefix={<TeamOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
@@ -27,6 +31,11 @@ function Dashboard() {
           </Card>
         </Col>
       </Row>
+
+      <div className="flex gap-4 ">
+          <PublicDocumentList />
+          <AllUserList />
+      </div>
     </div>
   )
 }

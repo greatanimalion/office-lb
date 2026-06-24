@@ -61,7 +61,7 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
         const availableUsers = res.data.user.filter(u => !existingUserIds.includes(u.id))
         setUserOptions(availableUsers.map(u => ({
           value: u.id,
-          label: `${u.username} (${u.email})`
+          label: `${u.username} (${u.email || '第三方登录'})`
         })))
       }
     } catch (error) {

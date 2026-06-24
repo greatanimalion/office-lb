@@ -1,3 +1,4 @@
+import type { OnlineUser } from '@/types/user'
 import request from '../request'
 import type { LoginData, RegisterData, LoginResponse, User } from '@/types'
 
@@ -22,7 +23,7 @@ export const authAPI = {
     message:string
     success:boolean
   }>('/api/auth/sendcode', { email }),
-  getAllUser: () => request.get<{success:boolean,message:string,user:User[]}>('/api/auth/user/all'),
+  getAllUser: () => request.get<{success:boolean,message:string,user:OnlineUser[]}>('/api/auth/user/all'),
   profile: () => request.get<User>('/api/auth/profile'),
   updateUser: (user: Partial<User>) => request.put<{success:boolean,message:string}>('/api/auth/user', user),
 }

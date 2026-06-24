@@ -46,7 +46,7 @@ export function GroupDetail({ groupId, onBack }: GroupDetailProps) {
               key: 'members',
               label: '组成员',
               children: <GroupMembers groupId={groupId} />,
-            },
+            }
           ]}
         />
     </div>

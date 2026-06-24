@@ -234,7 +234,7 @@ function MainLayout() {
               items={menuItems}
             />
           </Sider>
-          <Content className="p-6">
+          <Content className="p-3 overflow-auto">
             <Outlet />
           </Content>
         </Layout>

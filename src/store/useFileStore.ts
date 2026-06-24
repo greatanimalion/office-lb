@@ -23,7 +23,7 @@ const useFileStore = create<FileState>((set, get) => ({
     try {
       const userId = JSON.parse(localStorage.getItem('user') || '{}').id
       const response = await fileAPI.list({ ...params, owner_id: userId, owner_type: 'user' })
-      set({ ODocuments: response.data.data || [] })
+      set({ ODocuments: response.data.data.documents || [] })
     } finally {
       set({ loading: false })
     }

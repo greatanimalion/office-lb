@@ -155,3 +155,4 @@ const docEditor = new DocsAPI.DocEditor("placeholder", config);
 ```
 
 这个配置对象会传递给 OnlyOffice 的 `DocsAPI.DocEditor` 构造函数，用于初始化文档编辑器实例。
+

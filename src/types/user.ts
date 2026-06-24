@@ -9,7 +9,14 @@ export interface User {
   role?: 'admin' | 'user'
   createdAt?: string
 }
-
+export interface OnlineUser {
+  id: number
+  username: string
+  avatar?: string
+  provider: string
+  email: string
+  last_login_at: string
+}
 export interface LoginData {
   email: string
   password: string

@@ -16,16 +16,10 @@ import ShareModal from './components/ShareModal'
 import { fileAPI } from '@/services/api/file'
 import { type DocumentVersion } from '@/types/file'
 import { formatDate } from '@/utils/day'
-
+import { formatFileSize } from '@/utils/file'
+import DVersionList from '@/components/business/DVersionList'
 const { Search } = Input
 
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
 
 function FileManager() {
   const navigate = useNavigate()
@@ -36,21 +30,17 @@ function FileManager() {
   const [selectedDocument, setSelectedDocument] = useState<MyDocument | null>(null)
   const [editModalVisible, setEditModalVisible] = useState(false)
   const [versions, setVersions] = useState<DocumentVersion[]>([])
-  const [versionsLoading, setVersionsLoading] = useState(false)
   const [form] = Form.useForm()
-
+  const [fileExtension, setFileExtension] = useState('')
   const handleOpenEditModal = async (document: MyDocument) => {
-    setSelectedDocument(document)
     form.setFieldsValue({ title: document.title })
-    setVersionsLoading(true)
     try {
       const response = await fileAPI.getDocumentVersions(document.id)
       setVersions(response.data.data || [])
+      setSelectedDocument({...document,version_number:response.data.currentVersion})
     } catch {
       setVersions([])
-    } finally {
-      setVersionsLoading(false)
-    }
+    }  
     setEditModalVisible(true)
   }
 
@@ -67,17 +57,7 @@ function FileManager() {
     }
   }
 
-  const handleRevertVersion = async (versionId: number) => {
-    if (!selectedDocument) return
-    try {
-      await fileAPI.revertToVersion(selectedDocument.id, versionId)
-      message.success('版本回溯成功')
-      setEditModalVisible(false)
-      fetchODocuments()
-    } catch {
-      message.error('回溯失败')
-    }
-  }
+
   const docList = Array.isArray(ODocuments) ? ODocuments : []
   useEffect(() => {
     fetchODocuments()
@@ -207,40 +187,7 @@ function FileManager() {
 
           <div>
             <h3 className="font-medium mb-3">版本历史</h3>
-            {versionsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-              </div>
-            ) : versions.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">暂无版本记录</p>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {versions.map((version) => (
-                  <div
-                    key={version.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Tag>V{version.version_number}</Tag>
-                        <span className="font-medium">{version.filename}</span>
-                      </div>
-                      <div className="text-sm text-gray-400 mt-1">
-                        {formatFileSize(version.filesize)} - {formatDate(version.created_at)}
-                      </div>
-                    </div>
-                    <Button
-                      type="primary"
-                      ghost
-                      icon={<HistoryOutlined />}
-                      onClick={() => handleRevertVersion(version.id)}
-                    >
-                      回溯
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <DVersionList documentId={selectedDocument?.id || 0} cb={()=>{setEditModalVisible(false)}} />
           </div>
         </div>
       </Modal>
@@ -264,7 +211,7 @@ function FileManager() {
           />
           <Upload.Dragger
             name="file"
-            accept=".doc,.docx"
+            accept=".doc,.docx,.pdf,.txt,.xlsx,.xls,.ppt,.pptx"
             beforeUpload={handleUpload}
             fileList={[]}
             disabled={uploading}
@@ -315,7 +262,6 @@ function FileManager() {
 
       {/* 文档列表 */}
       <div className="overflow-auto h-[calc(100vh-350px)]">
-
         <Table
           columns={columns}
           dataSource={docList}
@@ -327,7 +273,7 @@ function FileManager() {
             showQuickJumper: true,
             showTotal: (total) => `共 ${total} 条记录`,
           }}
-          bordered={false}
+         
           className="w-full"
         />
     </div>

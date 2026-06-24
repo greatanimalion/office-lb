@@ -104,7 +104,7 @@ const useGroupStore = create<GroupState>((set, get) => ({
       const owner_type =pathFolder.length==0?'group':'folder'
       const owner_id = pathFolder.length==0 ? get().currentGroup?.id||0 : pathFolder[pathFolder.length-1].id
       const response = await fileAPI.list({ page: 1, pageSize: 100, owner_id, owner_type })
-      set({ documents: response.data.data || [] })
+      set({ documents: response.data.data.documents || [] })
     } catch {
       set({ documents: [] })
     }

@@ -16,17 +16,23 @@ interface UserState {
   setUser: (user: User) => void
   otherLogin: () => Promise<boolean>
 }
-
+//持久化用户信息
+function persistUser(user: any, token?: string ) {
+  localStorage.setItem('user', JSON.stringify(user))
+  if(token){
+    localStorage.setItem('token', token)
+  }
+}
 const useUserStore = create<UserState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
-  token: localStorage.getItem('token') || null,
+  token: localStorage.getItem('token'),
   isAuthenticated: !!localStorage.getItem('token'),
   changeGroup: async (groupId: number) => {
     const res = await authAPI.changeGroup(groupId)
     if (res.data.success) {
       message.success(res.data.message)
       set((state) => ({ user: { ...state.user!, group_id: groupId } as any }))
-      localStorage.setItem('user', JSON.stringify({ ...JSON.parse(localStorage.getItem('user') || 'null'), group_id: groupId }))
+      persistUser({ ...JSON.parse(localStorage.getItem('user') || 'null'), group_id: groupId })
     } else {
       message.error(res.data.message)
     }
@@ -36,7 +42,7 @@ const useUserStore = create<UserState>((set) => ({
     if (res.data.success) {
       message.success(res.data.message)
       set((state) => ({ user: { ...state.user!, ...user } as any }))
-      localStorage.setItem('user', JSON.stringify({ ...JSON.parse(localStorage.getItem('user') || 'null'), ...user }))
+      persistUser({ ...JSON.parse(localStorage.getItem('user') || 'null'), ...user })
     } else {
       message.error(res.data.message)
     }
@@ -48,9 +54,8 @@ const useUserStore = create<UserState>((set) => ({
       message.error(response.data.message)
       return false
     }
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(user))
-    set({ token, user: user as any, isAuthenticated: true })
+    persistUser(user, token)
+    set({ user: user as any, isAuthenticated: true })
     return true
   },
   otherLogin: async () => {
@@ -59,9 +64,9 @@ const useUserStore = create<UserState>((set) => ({
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
       if (!token) return false
-      localStorage.setItem('token', token)
+      persistUser(res.user, token)
       set({
-        token, user: {
+        user: {
           id: res.user.id,
           username: res.user.username,
           email: res.user.email,
