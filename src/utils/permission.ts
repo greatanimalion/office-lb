@@ -3,7 +3,7 @@ import { PermissionNumber, PermissionType, type Permission } from '../types'
 /**
  * 将权限数组转换为二进制数
 */
-export function permissonToBinary(
+export function permissonToNum(
   permission: Permission[],
 ): number {
   let binary = 0x0000000
@@ -40,7 +40,7 @@ export function permissonToBinary(
 /**
  * 将二进制数转换为权限数组,如0x00000011转换为[VIEW,SHARE],
 */
-export function binaryToPermisson(
+export function numToPermisson(
   binary: number,
 ): Permission[] {
   const permission: Permission[] = []

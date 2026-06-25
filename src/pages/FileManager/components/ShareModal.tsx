@@ -4,6 +4,7 @@ import { ShareAltOutlined, UserOutlined, LinkOutlined, LockOutlined, ClockCircle
 import { PermissionType, type MyDocument } from '@/types'
 import { authAPI } from '@/services/api/auth'
 import { groupAPI } from '@/services/api/group'
+import useUserStore from '@/store/useUserStore'
 
 const { RangePicker } = DatePicker
 
@@ -12,16 +13,21 @@ interface ShareModalProps {
   onCancel: () => void
   document: MyDocument | null
 }
-const options=[ {
+const options = [{
   label: '可编辑',
   value: PermissionType.EDIT,
-},{
+}, {
   label: '可评论',
   value: PermissionType.COMMENT,
-},{
+}, {
   label: '可下载',
   value: PermissionType.DOWNLOAD,
 }
+]
+const permissionOptions: { value: PermissionType; label: string }[] = [
+  { value: PermissionType.DOWNLOAD, label: '下载' },
+  { value: PermissionType.EDIT, label: '编辑' },
+  { value: PermissionType.COMMENT, label: '评论' },
 ]
 function ShareModal({ visible, onCancel, document }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<'internal' | 'external'>('internal')
@@ -30,13 +36,14 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
   const [selectedUserOrGroup, setSelectedUserOrGroup] = useState<string>("user")
   const [selectedUserOrGroupValue, setSelectedUserOrGroupValue] = useState<string>("")
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
+  const user = useUserStore((state) => state.user)
   const [form] = Form.useForm()
   useEffect(() => {
     async function getNames() {
       try {
         const res = await authAPI.getAllUser()
         if (res.data.success) {
-          setUserNames(res.data.user.map(user => ({ name: user.username, id: user.id })))
+          setUserNames(res.data.user.map(u => ({ name: u.username, id: u.id })).filter(u => u.id !== user.id))
         }
         const res2 = await groupAPI.list()
         setGroupNames(res2.data.map(group => ({ name: group.name, id: group.id })))
@@ -47,19 +54,19 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
     getNames()
   }, [])
   const handleSubmit = () => {
-    if(!selectedUserOrGroupValue){
+    if (!selectedUserOrGroupValue) {
       message.error("请选择用户或分组")
       return
     }
-    if(!selectedPermissions.length){
+    if (!selectedPermissions.length) {
       message.error("请选择权限")
       return
     }
     form.getFieldsValue()
     if (activeTab === 'internal') {
-      const messageStr=selectedUserOrGroup==="user"?"已分享至用户"+selectedUserOrGroupValue:"已分享至分组"+selectedUserOrGroupValue
+      const messageStr = selectedUserOrGroup === "user" ? "已分享至用户" + selectedUserOrGroupValue : "已分享至分组" + selectedUserOrGroupValue
       message.success(messageStr)
-      console.log(selectedUserOrGroupValue,selectedUserOrGroup,selectedPermissions)
+      console.log(selectedUserOrGroupValue, selectedUserOrGroup, selectedPermissions)
     } else {
       message.success('外链共享链接已生成')
     }
@@ -91,8 +98,8 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
           <button
             type="button"
             className={`px-4 py-2   font-medium transition-colors ${activeTab === 'internal'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             onClick={() => setActiveTab('internal')}
           >
@@ -104,8 +111,8 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
           <button
             type="button"
             className={`px-4 py-2   font-medium transition-colors ${activeTab === 'external'
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             onClick={() => setActiveTab('external')}
           >
@@ -128,10 +135,10 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
                   style={{ width: 250 }}
                   allowClear
                   value={selectedUserOrGroup}
-                  onChange={(value)=>{setSelectedUserOrGroup(value);setSelectedUserOrGroupValue("") }}
+                  onChange={(value) => { setSelectedUserOrGroup(value); setSelectedUserOrGroupValue("") }}
                 >
-                  <Select.Option value="user">用户</Select.Option>
-                  <Select.Option value="group">分组</Select.Option>
+                  <option value="user">用户</option>
+                  <option value="group">分组</option>
                 </Select>
                 <Select
                   placeholder="选择用户或分组"
@@ -153,13 +160,13 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
                 options={options}
                 value={selectedPermissions}
                 onChange={setSelectedPermissions}
-                defaultValue={["可读","可编辑","可下载"]}/>
+                defaultValue={["可读", "可编辑", "可下载"]} />
             </div>
           </div>
         </Form>
       ) : (
         <Form form={form} layout="vertical">
-          <div className="space-y-4">
+          <div className="space-y-2">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-gray-600">分享链接</span>
               <span className="text-blue-500 text-sm font-mono">
@@ -180,23 +187,32 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
                 <RangePicker style={{ width: '100%' }} />
               </div>
             </Form.Item>
+            <div className="flex justify-between">
+              <Form.Item label="访问次数限制">
+                <div className="flex items-center gap-2">
+                  <InputNumber
+                    placeholder="最大访问次数"
+                    min={1}
+                    max={9999}
+                    style={{ width: 150 }}
+                  />
+                  <span className="text-gray-500">次</span>
+                </div>
+              </Form.Item>
+              <Form.Item label="文档水印（可选）">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="文档水印内容"
+                    style={{ width: 150 }}
+                  />
+                  <span className="text-gray-500">内容</span>
+                </div>
+              </Form.Item>
+            </div>
 
-            <Form.Item label="访问次数限制">
-              <div className="flex items-center gap-2">
-                <InputNumber
-                  placeholder="最大访问次数"
-                  min={1}
-                  max={9999}
-                  style={{ width: 150 }}
-                />
-                <span className="text-gray-500">次</span>
-              </div>
-            </Form.Item>
-            <Form.Item>
-              <Checkbox>允许他人下载</Checkbox>
-            </Form.Item>
-            <Form.Item>
-              <Checkbox>允许他人编辑</Checkbox>
+
+            <Form.Item name="permissions" label="权限设置">
+              <Checkbox.Group options={permissionOptions} />
             </Form.Item>
           </div>
         </Form>

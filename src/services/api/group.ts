@@ -39,6 +39,9 @@ export const groupAPI = {
   createFolder: (groupId: number,permission: number,filename: string,parentFolderId?: number) =>
     request.post<Folder>(`/api/folders`, { permission, groupId,filename,parentFolderId }),
 
+  updateFolder: (folderId: number, data: { filename: string; permission: number }) =>
+    request.put<{success:boolean,message?:string}>(`/api/folders/${folderId}`, data),
+
   shareDocumentToGroup: (groupId: number, documentId: number) =>
     request.post(`/api/groups/${groupId}/documents`, { documentId }),
 }

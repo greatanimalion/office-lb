@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Spin } from 'antd'
+import { message, Spin } from 'antd'
 import { fileAPI } from '@/services/api/file'
 import {DocumentEditor} from "@onlyoffice/document-editor-react"
 
@@ -10,13 +10,14 @@ function DocumentPreview() {
   const [documentConfig, setDocumentConfig] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   useEffect(() => {
-    if (!id) return
+    if (!id) return message.error("无效文档ID")
     setLoading(true)
     async function getConfig() {
       const config = await fileAPI.getConfig(Number(id))
       setDocumentConfig(config)
       setLoading(false)
     }
+     
     getConfig()
   }, [id])
   return (

@@ -8,7 +8,7 @@ interface FileState {
   loading: boolean
   fetchODocuments: (params?: { page: number; pageSize: number }) => Promise<void>
   setCurrentDocument: (doc: MyDocument | null) => void
-  createDocument: (data: FormData) => Promise<{ id: number; title: string } | null>
+  createDocument: (data: FormData) => Promise<{ id: number; title: string } | null | undefined>
   updateDocument: (id: number, title: string) => Promise<boolean>
   deleteDocument: (id: number) => Promise<boolean>
 }
@@ -33,19 +33,19 @@ const useFileStore = create<FileState>((set, get) => ({
     set({ currentDocument: doc })
   },
 
-  createDocument: async (data: FormData) => {
+  createDocument: async (_data: FormData) => {
     try {
-      const response = await fileAPI.create(data)
+      // const response = await fileAPI.create(data)
       await get().fetchODocuments()
-      return response.data
+      // return response.data
     } catch {
       return null
     }
   },
 
-  updateDocument: async (id: number, title: string) => {
+  updateDocument: async (_id: number, _title: string) => {
     try {
-      await fileAPI.update(id, { title })
+      // await fileAPI.update(id, { title })
       await get().fetchODocuments()
       return true
     } catch {
@@ -53,9 +53,9 @@ const useFileStore = create<FileState>((set, get) => ({
     }
   },
 
-  deleteDocument: async (id: number) => {
+  deleteDocument: async (_id: number) => {
     try {
-      await fileAPI.delete(id)
+      // await fileAPI.delete(id)
       await get().fetchODocuments()
       return true
     } catch {

@@ -6,18 +6,14 @@ import {
   EditOutlined,
   EyeOutlined,
   ShareAltOutlined,
-  HistoryOutlined,
 } from '@ant-design/icons'
 import useFileStore from '@/store/useFileStore'
 import type { MyDocument } from '@/types'
 import { useFileUpload } from '@/hooks/useFileUpload'
 import { useNavigate } from 'react-router-dom'
 import ShareModal from './components/ShareModal'
-import { fileAPI } from '@/services/api/file'
-import { type DocumentVersion } from '@/types/file'
-import { formatDate } from '@/utils/day'
-import { formatFileSize } from '@/utils/file'
 import DVersionList from '@/components/business/DVersionList'
+import { formatFileSize } from '@/utils/file'
 const { Search } = Input
 
 
@@ -29,26 +25,19 @@ function FileManager() {
   const [shareModalVisible, setShareModalVisible] = useState(false)
   const [selectedDocument, setSelectedDocument] = useState<MyDocument | null>(null)
   const [editModalVisible, setEditModalVisible] = useState(false)
-  const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [form] = Form.useForm()
-  const [fileExtension, setFileExtension] = useState('')
+
   const handleOpenEditModal = async (document: MyDocument) => {
     form.setFieldsValue({ title: document.title })
-    try {
-      const response = await fileAPI.getDocumentVersions(document.id)
-      setVersions(response.data.data || [])
-      setSelectedDocument({...document,version_number:response.data.currentVersion})
-    } catch {
-      setVersions([])
-    }  
+    setSelectedDocument(document)
     setEditModalVisible(true)
   }
 
   const handleUpdateTitle = async () => {
     if (!selectedDocument) return
     try {
-      const values = await form.validateFields()
-      await fileAPI.update(selectedDocument.id, { title: values.title })
+      await form.validateFields()
+      // await fileAPI.update(selectedDocument.id, { title: values.title })
       message.success('文件名修改成功')
       setEditModalVisible(false)
       fetchODocuments()

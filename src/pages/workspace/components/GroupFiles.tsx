@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Tag } from 'antd'
+import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Popover, Popconfirm } from 'antd'
 import {
   DeleteOutlined,
   FolderOutlined,
@@ -9,6 +9,8 @@ import {
   SearchOutlined,
   EyeOutlined,
   HistoryOutlined,
+  SafetyOutlined,
+
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import useFileStore from '@/store/useFileStore'
@@ -16,13 +18,15 @@ import { groupAPI } from '@/services/api/group'
 import { formatDate } from '@/utils/day'
 import { PermissionType } from '@/types'
 import { formatFileSize } from '@/utils/file'
-import { permissonToBinary } from '@/utils/permission'
+import { permissonToNum } from '@/utils/permission'
 import type { Folder, MyDocument } from '@/types/file'
 import type { DocumentVersion } from '@/types/file'
 import { fileAPI } from '@/services/api/file'
 const { Search } = Input
-import {getFileIcon} from '@/components/common/fileICON'
+import { getFileIcon } from '@/components/common/fileICON'
 import DVersionList from '@/components/business/DVersionList'
+import { numToPermisson } from '@/utils/permission'
+import { getPermissionIcon } from '@/components/common/permissionIcon'
 const permissionOptions: { value: PermissionType; label: string }[] = [
   { value: PermissionType.VIEW, label: '查看' },
   { value: PermissionType.DOWNLOAD, label: '下载' },
@@ -38,6 +42,7 @@ interface GroupFilesProps {
   groupId: number
 }
 
+
 export function GroupFiles({ groupId }: GroupFilesProps) {
   const { getFolders, folders, documents, refreshDocuments, pushPath, popPath, pathFolder } = useGroupStore()
   const { fetchODocuments, ODocuments } = useFileStore()
@@ -50,17 +55,28 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
   const [versions, setVersions] = useState<DocumentVersion[]>([])
   const [versionsLoading, setVersionsLoading] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState<MyDocument | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null)
+
+  const handleOpenEditModal = (folder: Folder) => {
+    setEditingFolder(folder)
+    setIsEditing(true)
+    form.setFieldsValue({
+      name: folder.filename,
+      permissions: numToPermisson(Number(folder.permission))
+    })
+  }
 
   const handleOpenVersionModal = async (doc: MyDocument) => {
     setVersionsLoading(true)
     try {
       const response = await fileAPI.getDocumentVersions(doc.id)
       setVersions(response.data.data || [])
-      setSelectedDoc({...doc, version_number: response.data.currentVersion||-1})
+      setSelectedDoc({ ...doc, version_number: response.data.currentVersion || -1 })
     } catch {
       setVersions([])
       setSelectedDoc(doc)
-    }  
+    }
     setVersionsLoading(false)
     setVersionModalVisible(true)
   }
@@ -87,10 +103,11 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
     popPath()
   }
 
-  const handleDeleteDocument = async (docId: number) => {
+  const handleDelFolder = async (folderId: number) => {
     try {
-      await groupAPI.deleteDocument?.(groupId, docId)
-      message.success('删除成功')
+      const response = await fileAPI.deleteFolder(folderId)
+      if (!response.data.success) return message.error(response.data.message || '删除失败')
+      if (response.data.success) message.success('删除成功')
       getFolders()
     } catch {
       message.error('删除失败')
@@ -104,7 +121,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
         name: values.name,
         permissions: values.permissions || []
       }
-      const permisson = permissonToBinary(folderData.permissions)
+      const permisson = permissonToNum(folderData.permissions)
       if (permisson == 0) return message.error('权限不能为空')
       await groupAPI.createFolder(groupId, permisson, folderData.name, pathFolder[pathFolder.length - 1]?.id)
       message.success('文件夹创建成功')
@@ -113,6 +130,27 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
       getFolders()
     } catch (error) {
       message.error('创建失败')
+    }
+  }
+
+  const handleUpdateFolder = async () => {
+    if (!editingFolder) return
+    try {
+      const values = await form.validateFields()
+      const permission = permissonToNum(values.permissions || [])
+      if (permission == 0) return message.error('权限不能为空')
+      const response = await groupAPI.updateFolder(editingFolder.id, {
+        filename: values.name,
+        permission
+      })
+      if (!response.data.success) return message.error(response.data.message || '更新失败')
+      if (response.data.success) message.success('文件夹更新成功')
+      setIsEditing(false)
+      setEditingFolder(null)
+      form.resetFields()
+      getFolders()
+    } catch {
+      message.error('更新失败')
     }
   }
 
@@ -171,38 +209,46 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           description="暂无文件"
         />
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {/* 文件夹列表 */}
           {folders.map(folder => (
             <div
               key={folder.id}
-              className="flex items-center justify-between p-3  shadow-md  bg-white rounded-lg   transition-all cursor-pointer"
+              className="flex items-center justify-between p-3  shadow-xs   rounded-lg   transition-all cursor-pointer"
               onClick={() => handleFolderClick(folder)}
             >
               <div className="flex items-center gap-3 flex-1">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <FolderOutlined className="text-amber-500 text-xl" />
+                <div className="w-10 h-10 rounded-lg   flex items-center justify-center">
+                  <FolderOutlined style={{ color: 'oklch(76.9% 0.188 70.08)', fontSize: '20px' }} />
                 </div>
                 <div className="flex-1">
                   <div className="font-medium text-amber-800">
                     {folder.filename}
                   </div>
-                  <div className="text-sm text-amber-400/70 mt-0.5">
+                  <div className="text-sm mt-0.5">
                     {formatDate(folder.createdAt)}
                   </div>
                 </div>
               </div>
               <Space onClick={(e) => e.stopPropagation()}>
-                <Button type="text" icon={<EditOutlined />} size="small">编辑</Button>
-                <Button
-                  type="text"
-                  danger
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  onClick={() => handleDeleteDocument(folder.id)}
+                <Popover placement="left" title="权限详情" content={<div className="grid grid-cols-3 gap-2">
+                  {numToPermisson(Number(folder.permission)).map((item) => (
+                    <div key={item}>{getPermissionIcon(item)}</div>
+                  ))}
+                  </div>}>
+                  <Button type="text" icon={<SafetyOutlined />}>权限详情</Button>
+                </Popover>
+                <Button type="text" icon={<EditOutlined />} onClick={() => handleOpenEditModal(folder)}>编辑</Button>
+                <Popconfirm
+                  title="确认删除"
+                  description={`确定要删除文件夹 "${folder.filename}" 吗？删除后文件夹内的所有内容将被永久删除。`}
+                  onConfirm={() => handleDelFolder(folder.id)}
+                  okText="确定"
+                  cancelText="取消"
+                  okButtonProps={{ danger: true }}
                 >
-                  删除
-                </Button>
+                  <Button type="text" danger>删除</Button>
+                </Popconfirm>
               </Space>
             </div>
           ))}
@@ -212,25 +258,25 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
             return (
               <div
                 key={doc.id}
-                className={`flex items-center justify-between p-3 bg-white shadow-md rounded-lg  transition-all`}
+                className={`flex items-center justify-between p-3  shadow-xs rounded-lg  transition-all`}
               >
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                     {icon}
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium text-gray-800">
+                    <div className="font-medium ">
                       {doc.title}
                     </div>
-                    <div className="text-sm text-gray-400 mt-0.5">
+                    <div className="text-sm  mt-0.5">
                       {formatFileSize(doc.fileSize || 0)} - {formatDate(doc.created_at)}
                     </div>
                   </div>
                 </div>
                 <Space>
-                  <Button type="text" icon={<EyeOutlined />} size="small" onClick={() => window.open(`/documents/${doc.id}/edit`, '_blank')}>查看</Button>
-                  <Button type="text" icon={<HistoryOutlined />} size="small" onClick={() => handleOpenVersionModal(doc)}>版本回溯</Button>
-                  <Button type="text" danger icon={<DeleteOutlined />} size="small" onClick={() => handleDeleteDocument(doc.id)}>删除</Button>
+                  <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(`/documents/${doc.id}/edit`, '_blank')}>查看</Button>
+                  <Button type="text" icon={<HistoryOutlined />} onClick={() => handleOpenVersionModal(doc)}>版本回溯</Button>
+                  <Button type="text" danger onClick={() => {}}>删除</Button>
                 </Space>
               </div>
             )
@@ -238,14 +284,16 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
         </div>
       )}
       <Modal
-        title="创建文件夹"
-        open={isCreateModalOpen}
-        onOk={handleCreateFolder}
+        title={isEditing ? '编辑文件夹' : '创建文件夹'}
+        open={isCreateModalOpen || isEditing}
+        onOk={isEditing ? handleUpdateFolder : handleCreateFolder}
         onCancel={() => {
           setIsCreateModalOpen(false)
+          setIsEditing(false)
+          setEditingFolder(null)
           form.resetFields()
         }}
-        okText="创建"
+        okText={isEditing ? '保存' : '创建'}
         cancelText="取消"
       >
         <Form form={form} layout="vertical">
@@ -341,8 +389,8 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           <Empty description="暂无版本记录" />
         ) : (
           <div className="space-y-3">
-            <DVersionList documentId={selectedDoc?.id || 0} cb={()=>{setVersionModalVisible(false)}} />
-         
+            <DVersionList documentId={selectedDoc?.id || 0} cb={() => { setVersionModalVisible(false) }} />
+
           </div>
         )}
       </Modal>

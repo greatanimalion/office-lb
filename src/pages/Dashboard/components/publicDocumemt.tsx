@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Card, Table, Tag, Button, Input, Modal, Transfer, message } from 'antd'
 import { formatDate } from '@/utils/day'
 import { formatFileSize } from '@/utils/file'
-import { getFileIcon } from '@/components/common/fileICON'
 import { fileAPI } from '@/services/api/file'
 import type { MyDocument } from '@/types'
 import useUserStore from '@/store/useUserStore'
@@ -18,9 +17,10 @@ function PublicDocumentList() {
     const [selectedDocIds, setSelectedDocIds] = useState<number[]>([])
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [filter,setFilter] = useState('')
     const reflesh = async () => {
         setLoading(true)
-        const res = await fileAPI.list({ page: currentPage, pageSize: pageSize, owner_type: 'public' })
+        const res = await fileAPI.list({ page: currentPage, pageSize: pageSize,owner_id:0, owner_type: 'public',filter })
         if (res.data.success) {
             setODocuments(res.data.data.documents || [])
             setTotal(res.data.data.total || 0)
@@ -63,7 +63,6 @@ function PublicDocumentList() {
             width: 100,
             render: (text: number) => formatFileSize(text),
         },
-       
         {
             title: '上传时间',
             dataIndex: 'updated_at',
@@ -147,7 +146,10 @@ function PublicDocumentList() {
                 <Search
                     placeholder="搜索文档..."
                     allowClear
+                    value={filter}
+                    onChange={(e)=>setFilter(e.target.value)}
                     size="middle"
+                    onSearch={reflesh}
                     style={{ width: 250 }}
                 />
                 <Button type="primary" onClick={() => setIsUploadModalOpen(true)}>上传文档</Button>

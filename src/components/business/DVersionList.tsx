@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Empty, Spin, message, Tag } from 'antd'
+import { Button, Empty, Spin, message, Tag, Popconfirm } from 'antd'
 import {
     HistoryOutlined,
 } from '@ant-design/icons'
@@ -21,6 +21,18 @@ export function DVersionList({ documentId, cb }: DVersionListProps) {
     const [loading, setLoading] = useState(true)
     const [versions, setVersions] = useState<DocumentVersion[]>([])
     const [vn, setVn] = useState<number>(-1)
+    const handleDeleteDVersion = async (versionId: number) => {
+        if (!documentId || !versionId) return
+        try {
+            const response = await fileAPI.deleteDocumentVersion(versionId)
+            if (!response.data.success) return message.error(response.data.message || '删除失败')
+            message.success('版本删除成功')
+            await getVersions()
+            cb?.()
+        } catch {
+            message.error('删除失败')
+        }
+    }
     async function getVersions() {
         setLoading(true)
         const response = await fileAPI.getDocumentVersions(documentId)
@@ -43,7 +55,7 @@ export function DVersionList({ documentId, cb }: DVersionListProps) {
     }
     useEffect(() => {
         getVersions()
-    }, [])
+    }, [documentId])
 
     return (
         <>
@@ -71,15 +83,28 @@ export function DVersionList({ documentId, cb }: DVersionListProps) {
                                     <span>{formatDate(version.created_at)}，由 <Tag>{version.alter_by_username}</Tag>{version.version_number == 1 ? '上传' : '最后修改'}</span>
                                 </div>
                             </div>
-                            {vn == version.version_number ? <Button type="text">当前版本</Button> : <Button
-                                type="primary"
-                                ghost
-                                icon={<HistoryOutlined />}
-                                size="small"
-                                onClick={() => handleRevertVersion(version.id)}
-                            >
-                                回溯
-                            </Button>}
+                            {vn == version.version_number ? <Button type="text">当前版本</Button> : <>
+                                <Button
+                                    type="link"
+                                    ghost
+                                    icon={<HistoryOutlined />}
+                                    className="mr-2"
+                                    onClick={() => handleRevertVersion(version.id)}
+                                >
+                                    回溯
+                                </Button>
+                                <Popconfirm
+                                    title="确认删除该版本吗？"
+                                    onConfirm={() => handleDeleteDVersion(version.id)}
+                                    key={version.id}
+                                    okText="确认"
+                                    cancelText="取消"
+                                >
+                                    <Button type="text" danger >
+                                        删除版本
+                                    </Button>
+                                </Popconfirm>
+                            </>}
                         </div>
                     ))}
                 </div>
