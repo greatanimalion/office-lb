@@ -11,6 +11,7 @@ import type { GroupMember } from '@/types'
 import { groupAPI } from '@/services/api/group'
 import { authAPI } from '@/services/api/auth'
 import { formatDate } from '@/utils/day'
+import useUserStore from '@/store/useUserStore'
 
 function getRoleTagColor(role: string): string {
   switch (role) {
@@ -44,7 +45,7 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [form] = Form.useForm()
   const [userOptions, setUserOptions] = useState<{ value: number; label: string }[]>([])
-
+  const user = useUserStore((state) => state.user)
   useEffect(() => {
     setLoading(true)
     Promise.all([
@@ -82,11 +83,16 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
   const handleAddMember = async () => {
     try {
       const values = await form.validateFields()
-      await groupAPI.addMember(groupId, values.userId, values.role)
-      message.success('添加成功')
-      setIsAddModalOpen(false)
-      form.resetFields()
-      fetchMembers(groupId)
+      const res = await groupAPI.addMember(groupId, values.userId, values.role)
+      if (res.data.success) {
+        message.success('添加成功')
+        setIsAddModalOpen(false)
+        form.resetFields()
+        fetchMembers(groupId)
+      } else {
+        message.error(res.data.message || '添加失败')
+      }
+
     } catch (error) {
       message.error('添加失败')
     }
@@ -105,7 +111,7 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
             className="bg-blue-500"
           />
           <div>
-            <div className="font-medium">{text}</div>
+            <div className="font-medium">{text}{record.userId === user.id && <span >(我)</span>}</div>
             <div className="text-gray-400 text-xs">{record.email}</div>
           </div>
         </div>
@@ -163,23 +169,23 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
         </Button>
       </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Spin size="large" />
-          </div>
-        ) : members.length === 0 ? (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="暂无成员"
-          />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={members}
-            rowKey="id"
-            pagination={false}
-          />
-        )}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <Spin size="large" />
+        </div>
+      ) : members.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description="暂无成员"
+        />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={members}
+          rowKey="id"
+          pagination={false}
+        />
+      )}
 
       <Modal
         title="添加成员"
@@ -212,9 +218,8 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
               placeholder="请选择角色"
               options={[
                 { value: 'admin', label: '管理员' },
-                { value: 'member', label: '成员' },
+                { value: 'member', label: '普通成员' },
               ]}
-              defaultValue="member"
             />
           </Form.Item>
         </Form>

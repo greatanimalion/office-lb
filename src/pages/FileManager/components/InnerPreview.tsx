@@ -27,7 +27,7 @@ function InnerPreview() {
         <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
           返回
         </Button>
-        <Button  type="dashed" onClick={() => window.open(`/documents/${id}/edit`, '_blank')}>
+        <Button  type="dashed" onClick={() => window.open(`/documents/${id}/preview`, '_blank')}>
           在新页面打开
         </Button>
       </div>

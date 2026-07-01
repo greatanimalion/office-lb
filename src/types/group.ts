@@ -15,6 +15,7 @@ export interface Group {
 
 export interface GroupMember {
   id: number
+  userId: number
   username: string
   email: string
   avatar?: string

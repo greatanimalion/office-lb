@@ -23,14 +23,14 @@ function AllUserList() {
                 {onlineUsers.map((u) => (
                     <div
                         key={u.id}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="flex items-center gap-3 p-3  rounded-lg  transition-colors"
                     >
                         <Avatar
                             src={u.avatar}
                             icon={<UserOutlined />}
                         />
                         <div className="flex-1">
-                            <div className="font-medium text-gray-800 flex  gap-1 items-center">
+                            <div className="font-medium  flex  gap-1 items-center">
                                 {user.id == u.id ? <div className={`w-2 h-2   rounded-full bg-green-500`} /> : null}
                                 {u.username}({u.email || (u.provider + "登录")})</div>
                             <div className="flex items-center gap-1">
@@ -38,7 +38,7 @@ function AllUserList() {
                                 {/* <span className={`text-sm ${user.online ? 'text-green-500' : 'text-gray-400'}`}>
                         {user.online ? '在线' : '离线'}
                       </span> */}
-                                <span className={`text-sm text-gray-400`}>上次登录时间：{formatDate(u.last_login_at)}</span>
+                                <span className={`text-sm `}>上次登录时间：{formatDate(u.last_login_at)}</span>
                             </div>
                         </div>
                     </div>

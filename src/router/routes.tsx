@@ -29,8 +29,8 @@ export const publicRoutes: RouteConfig[] = [
 export const privateRoutes: RouteConfig[] = [
   { path: '/', element: <Dashboard />, isIndex: true },
   { path: '/files', element: <FileManager /> },
-  { path: '/documents/:id/preview', element: <InnerPreview /> },
-  { path: '/documents/:id/edit', element: <DocumentPreview /> },
+  { path: '/documents/:id/inner-preview', element: <InnerPreview /> },
+  { path: '/documents/:id/preview', element: <DocumentPreview /> },
   { path: '/audit-log', element: <AuditLog /> },
   { path: '/permissions', element: <PermissionManage /> },
   { path: '/users', element: <UserManage /> },

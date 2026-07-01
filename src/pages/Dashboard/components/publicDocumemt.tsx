@@ -5,6 +5,7 @@ import { formatFileSize } from '@/utils/file'
 import { fileAPI } from '@/services/api/file'
 import type { MyDocument } from '@/types'
 import useUserStore from '@/store/useUserStore'
+import { Link } from 'react-router-dom'
 const { Search } = Input
 
 function PublicDocumentList() {
@@ -53,7 +54,7 @@ function PublicDocumentList() {
             width: 80,
             render: (text: string) => {
                 const ext = text.split('.').pop()?.toUpperCase() || '未知'
-                return <Tag color="gray">{ext}</Tag>
+                return <Tag >{ext}</Tag>
             },
         },
         {
@@ -74,10 +75,10 @@ function PublicDocumentList() {
             dataIndex: 'actions',
             key: 'actions',
             width: 150,
-            render: () => (
+            render: (_text: string, record: MyDocument) => (
                 <div className="flex items-center gap-2">
-                    <Button type="link" size="small">在线预览</Button>
-                    <Button type="link" size="small">下载</Button>
+                    <Button type="link" size="small" onClick={() => window.open(`/documents/${record.id}/preview`)}>在线预览</Button>
+                    <Link to={`http://192.168.2.126:3001/api/documents/d/${record.id}`}>下载</Link>
                 </div>
             ),
         }

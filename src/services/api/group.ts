@@ -19,7 +19,7 @@ export const groupAPI = {
     request.get<GroupMember[]>(`/api/groups/${groupId}/members`),
 
   addMember: (groupId: number, userId: number, role: 'admin' | 'member' = 'member') =>
-    request.post(`/api/groups/${groupId}/members`, { userId, role }),
+    request.post<{success:boolean,message:string}>(`/api/groups/${groupId}/members`, { userId, role }),
 
   removeMember: (groupId: number, userId: number) =>
     request.delete(`/api/groups/${groupId}/members/${userId}`),

@@ -27,7 +27,7 @@ function AppRouter() {
 
         <Route element={<PrivateRoute />}>
           <Route element={<MainLayout />}>
-            {privateRoutes.filter(route => route.path !== '/documents/:id/edit').map((route) => (
+            {privateRoutes.filter(route => route.path !== '/documents/:id/preview').map((route) => (
               <Route
                 key={route.path}
                 path={route.path}
@@ -37,7 +37,7 @@ function AppRouter() {
             ))}
           </Route>
           <Route element={<PreviewLayout />}>
-            <Route path="/documents/:id/edit" element={privateRoutes.find(r => r.path === '/documents/:id/edit')?.element} />
+            <Route path="/documents/:id/preview" element={privateRoutes.find(r => r.path === '/documents/:id/preview')?.element} />
           </Route>
         </Route>
 

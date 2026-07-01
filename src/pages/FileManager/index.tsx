@@ -99,7 +99,7 @@ function FileManager() {
       key: 'type',
       render: (text: string) => {
         const ext = text.split('.').pop()?.toUpperCase() || '未知'
-        return <Tag color="gray">{ext}</Tag>
+        return <Tag >{ext}</Tag>
       },
     },
     {
@@ -125,7 +125,7 @@ function FileManager() {
       width: 400,
       render: (_: unknown, record: MyDocument) => (
         <Space size="middle">
-          <Button type="text" icon={<EyeOutlined />} onClick={() => { navigate(`/documents/${record.id}/preview`); }}> 查看</Button>
+          <Button type="text" icon={<EyeOutlined />} onClick={() => { navigate(`/documents/${record.id}/inner-preview`); }}> 查看</Button>
           <Button type="text" icon={<EditOutlined />} onClick={() => handleOpenEditModal(record)}>编辑</Button>
            <Button type="text" icon={<ShareAltOutlined />} onClick={() => { setSelectedDocument(record); setShareModalVisible(true); }}>共享</Button>
           <Popconfirm
