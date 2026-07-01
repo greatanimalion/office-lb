@@ -31,7 +31,7 @@ function AllUserList() {
                         />
                         <div className="flex-1">
                             <div className="font-medium  flex  gap-1 items-center">
-                                {user.id == u.id ? <div className={`w-2 h-2   rounded-full bg-green-500`} /> : null}
+                                {user?.id == u.id ? <div className={`w-2 h-2   rounded-full bg-green-500`} /> : null}
                                 {u.username}({u.email || (u.provider + "登录")})</div>
                             <div className="flex items-center gap-1">
                                 {/* <span className={`w-2 h-2 rounded-full ${user.online ? 'bg-green-500' : 'bg-gray-400'}`} /> */}

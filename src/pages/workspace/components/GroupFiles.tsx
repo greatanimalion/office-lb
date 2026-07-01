@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Popover, Popconfirm } from 'antd'
 import {
-  DeleteOutlined,
   FolderOutlined,
   EditOutlined,
   UploadOutlined,
@@ -10,7 +9,6 @@ import {
   EyeOutlined,
   HistoryOutlined,
   SafetyOutlined,
-
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import useFileStore from '@/store/useFileStore'

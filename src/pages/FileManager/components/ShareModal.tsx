@@ -43,7 +43,7 @@ function ShareModal({ visible, onCancel, document }: ShareModalProps) {
       try {
         const res = await authAPI.getAllUser()
         if (res.data.success) {
-          setUserNames(res.data.user.map(u => ({ name: u.username, id: u.id })).filter(u => u.id !== user.id))
+          setUserNames(res.data.user.map(u => ({ name: u.username, id: u.id })).filter(u => u.id !== user?.id))
         }
         const res2 = await groupAPI.list()
         setGroupNames(res2.data.map(group => ({ name: group.name, id: group.id })))

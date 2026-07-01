@@ -29,11 +29,13 @@ function PublicDocumentList() {
         setLoading(false)
     }
     useEffect(() => {
-        fileAPI.list({ page: 1, pageSize: 999999, owner_type: 'user', owner_id: user.id }).then(res => {
-            if (res.data.success) {
-                setMyDocuments(res.data.data.documents || [])
-            }
-        })
+        if (user?.id) {
+            fileAPI.list({ page: 1, pageSize: 999999, owner_type: 'user', owner_id: user.id }).then(res => {
+                if (res.data.success) {
+                    setMyDocuments(res.data.data.documents || [])
+                }
+            })
+        }
         reflesh()
     }, [])
     useEffect(() => {
@@ -168,8 +170,8 @@ function PublicDocumentList() {
                     showTotal: (total) => `共 ${total} 条记录`,
                 }}
                 onChange={(e)=>{
-                    setCurrentPage(e.current)
-                    setPageSize(e.pageSize)
+                    setCurrentPage(e.current ?? 1)
+                    setPageSize(e.pageSize ?? 10)
                 }}
             />
         </Card>

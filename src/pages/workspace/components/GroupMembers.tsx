@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Tag, Space, Empty, Spin, message, Avatar, Modal, Form, Select } from 'antd'
+import { Table, Button, Tag, Space, Empty, Spin, message, Avatar, Modal, Form, Select, Popconfirm } from 'antd'
 import {
   DeleteOutlined,
   UserOutlined,
@@ -46,7 +46,21 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
   const [form] = Form.useForm()
   const [userOptions, setUserOptions] = useState<{ value: number; label: string }[]>([])
   const user = useUserStore((state) => state.user)
+
+  // 获取当前登录用户在组中的角色
+  const currentMember = members.find(m => m.userId === user?.id)
+  const currentRole = currentMember?.role || 'member'
+
+  // 判断当前用户是否有权限移除目标成员
+  const canRemove = (targetRole: string, targetUserId: number) => {
+    if (targetUserId === user?.id) return false // 不能移除自己
+    if (currentRole === 'owner') return true // owner 可以移除任何人
+    if (currentRole === 'admin' && targetRole === 'member') return true // admin 只能移除 member
+    return false
+  }
+
   useEffect(() => {
+
     setLoading(true)
     Promise.all([
       fetchMembers(groupId),
@@ -111,7 +125,7 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
             className="bg-blue-500"
           />
           <div>
-            <div className="font-medium">{text}{record.userId === user.id && <span >(我)</span>}</div>
+            <div className="font-medium">{text}{record.userId === user?.id && <span >(我)</span>}</div>
             <div className="text-gray-400 text-xs">{record.email}</div>
           </div>
         </div>
@@ -141,10 +155,19 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
       width: 100,
       render: (_: unknown, record: GroupMember) => (
         <Space>
-          {record.role !== 'owner' && (
-            <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleRemoveMember(record.id)}>
-              移除
-            </Button>
+          {canRemove(record.role, record.userId) && (
+            <Popconfirm
+              title="确认移除"
+              description={`确定要移除成员 "${record.username}" 吗？`}
+              onConfirm={() => handleRemoveMember(record.id)}
+              okText="确定"
+              cancelText="取消"
+              okButtonProps={{ danger: true }}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />}>
+                移除
+              </Button>
+            </Popconfirm>
           )}
         </Space>
       ),
