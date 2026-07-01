@@ -60,7 +60,6 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
   }
 
   useEffect(() => {
-
     setLoading(true)
     Promise.all([
       fetchMembers(groupId),

@@ -9,6 +9,7 @@ import {
   EyeOutlined,
   HistoryOutlined,
   SafetyOutlined,
+  PlusCircleOutlined,
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import useFileStore from '@/store/useFileStore'
@@ -186,7 +187,14 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
             icon={<UploadOutlined />}
             onClick={handleOpenUploadModal}
           >
-            上传文档
+            上传文件
+          </Button>
+          <Button
+            type="dashed"
+            icon={<PlusCircleOutlined />}
+            onClick={handleOpenUploadModal}
+          >
+            创建文件
           </Button>
           <Button
             type="primary"
@@ -272,7 +280,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
                   </div>
                 </div>
                 <Space>
-                  <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(`/documents/${doc.id}/edit`, '_blank')}>查看</Button>
+                  <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(`/documents/${doc.id}/preview`, '_blank')}>查看</Button>
                   <Button type="text" icon={<HistoryOutlined />} onClick={() => handleOpenVersionModal(doc)}>版本回溯</Button>
                   <Button type="text" danger onClick={() => {}}>删除</Button>
                 </Space>

@@ -70,9 +70,9 @@ export function DVersionList({ documentId, cb }: DVersionListProps) {
                     {versions.map((version) => (
                         <div
                             key={version.id}
-                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg   "
+                            className="flex items-center   justify-between p-4   rounded-lg   "
                         >
-                            <div className="flex-1">
+                            <div className="flex-1 ">
                                 <div className="flex items-center gap-2">
                                     <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">V{version.version_number}</span>
                                     <span className="font-medium text-gray-800">{version.filename}</span>

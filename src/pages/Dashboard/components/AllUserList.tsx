@@ -34,10 +34,6 @@ function AllUserList() {
                                 {user?.id == u.id ? <div className={`w-2 h-2   rounded-full bg-green-500`} /> : null}
                                 {u.username}({u.email || (u.provider + "登录")})</div>
                             <div className="flex items-center gap-1">
-                                {/* <span className={`w-2 h-2 rounded-full ${user.online ? 'bg-green-500' : 'bg-gray-400'}`} /> */}
-                                {/* <span className={`text-sm ${user.online ? 'text-green-500' : 'text-gray-400'}`}>
-                        {user.online ? '在线' : '离线'}
-                      </span> */}
                                 <span className={`text-sm `}>上次登录时间：{formatDate(u.last_login_at)}</span>
                             </div>
                         </div>
