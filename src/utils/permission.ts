@@ -41,8 +41,9 @@ export function permissonToNum(
  * 将二进制数转换为权限数组,如0x00000011转换为[VIEW,SHARE],
 */
 export function numToPermisson(
-  binary: number,
+  binary: number|string,
 ): Permission[] {
+  binary = Number(binary)
   const permission: Permission[] = []
   
   if (binary & PermissionNumber.VIEW) {

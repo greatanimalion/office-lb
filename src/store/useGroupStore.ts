@@ -13,19 +13,18 @@ interface GroupState {
   loading: boolean
   folders: Folder[]
   pathFolder: Folder[]
+  currentFolder: Folder | null
   getFolders: () => Promise<void>
   fetchGroups: () => Promise<void>
   fetchMembers: (groupId: number) => Promise<void>
   createGroup: (data: { name: string; description?: string }) => Promise<Group | null>
   deleteGroup: (id: number) => Promise<boolean>
-  /**
-   * 刷新文档列表
-  */
   refreshDocuments: () => Promise<void>
   pushPath: (folder: Folder) => void
   popPath: () => void
   clearPathFolder:()=>void
   setCurrentGroup: (group: Group | null) => void
+  setCurrentFolder: (folder: Folder | null) => void
 }
 
 const useGroupStore = create<GroupState>((set, get) => ({
@@ -49,7 +48,9 @@ const useGroupStore = create<GroupState>((set, get) => ({
       set({ loading: false })
     }
   },
-
+  setCurrentFolder: (folder: Folder | null) => {
+    set({ currentFolder: folder })
+  },
   fetchMembers: async (groupId: number) => {
     try {
       const response = await groupAPI.getMembers(groupId)

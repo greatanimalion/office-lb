@@ -118,6 +118,7 @@ function MainLayout() {
       icon: <FileTextOutlined />,
       label: '文档管理',
       children: [
+        { key: '/template', icon: <FileSearchOutlined />, label: '文件模板', onClick: () => navigate('/template-center') },
         { key: '/files', icon: <FileTextOutlined />, label: '私有文档', onClick: () => navigate('/files') },
         { key: '/shared', icon: <ShareAltOutlined />, label: '共享文档', onClick: () => navigate('/shared') },
       ],
@@ -129,7 +130,6 @@ function MainLayout() {
       children: [
         { key: '/system-management', icon: <DatabaseOutlined />, label: '系统管理', onClick: () => navigate('/system-management') },
         { key: '/component-center', icon: <AppstoreOutlined />, label: '组件中心', onClick: () => navigate('/component-center') },
-        { key: '/template-center', icon: <FileSearchOutlined />, label: '模板中心', onClick: () => navigate('/template-center') },
       ],
     },
     {

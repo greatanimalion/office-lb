@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Popover, Popconfirm } from 'antd'
+import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Popover, Popconfirm, Tag } from 'antd'
 import {
   FolderOutlined,
   EditOutlined,
@@ -9,7 +9,10 @@ import {
   EyeOutlined,
   HistoryOutlined,
   SafetyOutlined,
-  PlusCircleOutlined,
+  SettingOutlined,
+  ClockCircleOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import useFileStore from '@/store/useFileStore'
@@ -26,6 +29,9 @@ import { getFileIcon } from '@/components/common/fileICON'
 import DVersionList from '@/components/business/DVersionList'
 import { numToPermisson } from '@/utils/permission'
 import { getPermissionIcon } from '@/components/common/permissionIcon'
+import BasicSettingsModal from './BasicSettingsModal'
+import TemplateSettingsModal from './TemplateSettingsModal'
+import TempPermissionModal from './TempPermissionModal'
 const permissionOptions: { value: PermissionType; label: string }[] = [
   { value: PermissionType.VIEW, label: '查看' },
   { value: PermissionType.DOWNLOAD, label: '下载' },
@@ -43,7 +49,7 @@ interface GroupFilesProps {
 
 
 export function GroupFiles({ groupId }: GroupFilesProps) {
-  const { getFolders, folders, documents, refreshDocuments, pushPath, popPath, pathFolder } = useGroupStore()
+  const { getFolders, folders, documents, refreshDocuments, pushPath, popPath, pathFolder, currentFolder, setCurrentFolder } = useGroupStore()
   const { fetchODocuments, ODocuments } = useFileStore()
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -56,6 +62,12 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
   const [selectedDoc, setSelectedDoc] = useState<MyDocument | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null)
+  const [basicModalOpen, setBasicModalOpen] = useState(false)
+  const [templateModalOpen, setTemplateModalOpen] = useState(false)
+  const [tempPermModalOpen, setTempPermModalOpen] = useState(false)
+  const [settingsDoc, setSettingsDoc] = useState<MyDocument | null>(null)
+  const [tempPermissionForm] = Form.useForm()
+  const [members, setMembers] = useState<{ id: number; username: string }[]>([])
 
   const handleOpenEditModal = (folder: Folder) => {
     setEditingFolder(folder)
@@ -94,6 +106,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
 
   const handleFolderClick = (folder: Folder) => {
     pushPath(folder)
+    setCurrentFolder(folder)
     refreshDocuments()
     getFolders()
   }
@@ -153,6 +166,61 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
     }
   }
 
+  const openBasicModal = async (doc: MyDocument) => {
+    setSettingsDoc(doc)
+    setBasicModalOpen(true)
+    setTemplateModalOpen(false)
+    setTempPermModalOpen(false)
+  }
+
+  const openTemplateModal = async (doc: MyDocument) => {
+    setSettingsDoc(doc)
+    setTemplateModalOpen(true)
+    setBasicModalOpen(false)
+    setTempPermModalOpen(false)
+  }
+
+  const openTempPermModal = async (doc: MyDocument) => {
+    setSettingsDoc(doc)
+    try {
+      const res = await groupAPI.getMembers(groupId)
+      if (Array.isArray(res.data)) {
+        setMembers(res.data.map((m: any) => ({ id: m.userId, username: m.username })))
+      }
+    } catch {
+      setMembers([])
+    }
+    tempPermissionForm.resetFields()
+    setTempPermModalOpen(true)
+    setBasicModalOpen(false)
+    setTemplateModalOpen(false)
+  }
+
+  const handleCloseBasicModal = () => {
+    setBasicModalOpen(false)
+    setSettingsDoc(null)
+  }
+
+  const handleCloseTemplateModal = () => {
+    setTemplateModalOpen(false)
+    setSettingsDoc(null)
+  }
+
+  const handleCloseTempPermModal = () => {
+    setTempPermModalOpen(false)
+    setSettingsDoc(null)
+    tempPermissionForm.resetFields()
+  }
+  const handleLockDocument = async (doc: MyDocument) => {
+    try {
+      const response = await fileAPI.lockDocument(doc.id, doc.locked == 1)
+      if (!response.data.success) return message.error(response.data.message || '操作失败')
+      if (response.data.success) message.success(doc.locked == 1 ? '解锁成功' : '锁定成功')
+      refreshDocuments()
+    } catch {
+      message.error('操作失败')
+    }
+  }
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
@@ -188,13 +256,6 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
             onClick={handleOpenUploadModal}
           >
             上传文件
-          </Button>
-          <Button
-            type="dashed"
-            icon={<PlusCircleOutlined />}
-            onClick={handleOpenUploadModal}
-          >
-            创建文件
           </Button>
           <Button
             type="primary"
@@ -241,7 +302,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
                   {numToPermisson(Number(folder.permission)).map((item) => (
                     <div key={item}>{getPermissionIcon(item)}</div>
                   ))}
-                  </div>}>
+                </div>}>
                   <Button type="text" icon={<SafetyOutlined />}>权限详情</Button>
                 </Popover>
                 <Button type="text" icon={<EditOutlined />} onClick={() => handleOpenEditModal(folder)}>编辑</Button>
@@ -280,15 +341,33 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
                   </div>
                 </div>
                 <Space>
+                  <>
+                    {doc.locked ? <Tag  icon={<LockOutlined />}>已锁定</Tag> : ''} 
+                  </>
                   <Button type="text" icon={<EyeOutlined />} onClick={() => window.open(`/documents/${doc.id}/preview`, '_blank')}>查看</Button>
                   <Button type="text" icon={<HistoryOutlined />} onClick={() => handleOpenVersionModal(doc)}>版本回溯</Button>
-                  <Button type="text" danger onClick={() => {}}>删除</Button>
+                  <Popover
+                    trigger="hover"
+                    placement="right"
+                    content={
+                      <div className="flex flex-col">
+                        <Button type="text" icon={<SettingOutlined />} onClick={() => openBasicModal(doc)}>信息权限</Button>
+                        <Button type="text" icon={doc.locked ? <UnlockOutlined /> : <LockOutlined />} onClick={() => handleLockDocument(doc)}>{doc.locked ? '解锁文档' : '锁定文档'}</Button>
+                        <Button type="text" icon={<SafetyOutlined />} onClick={() => openTemplateModal(doc)}>模板设置</Button>
+                        <Button type="text" icon={<ClockCircleOutlined />} onClick={() => openTempPermModal(doc)}>临时授权</Button>
+                      </div>
+                    }
+                  >
+                    <Button type="text" icon={<SettingOutlined />}>设置</Button>
+                  </Popover>
+                  <Button type="text" danger onClick={() => { }}>删除</Button>
                 </Space>
               </div>
             )
           })}
         </div>
       )}
+      {/* 创建文件夹弹窗 */}
       <Modal
         title={isEditing ? '编辑文件夹' : '创建文件夹'}
         open={isCreateModalOpen || isEditing}
@@ -315,6 +394,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           </Form.Item>
         </Form>
       </Modal>
+      {/* 上传文档弹窗 */}
       <Modal
         title="上传文档到组"
         open={isUploadModalOpen}
@@ -376,7 +456,7 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           }}
         />
       </Modal>
-
+      {/* 版本历史弹窗 */}
       <Modal
         title={`版本历史 - ${selectedDoc?.title || selectedDoc?.filename || ''}`}
         open={versionModalVisible}
@@ -400,6 +480,31 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
           </div>
         )}
       </Modal>
+      {/* 基本信息与权限弹窗 */}
+      <BasicSettingsModal
+        key={`basic-${settingsDoc?.id || 'none'}`}
+        open={basicModalOpen}
+        doc={settingsDoc}
+        defaultPermissions={currentFolder?.permission || ''}
+        onCancel={handleCloseBasicModal}
+        onSaved={()=>{handleCloseBasicModal();refreshDocuments()}}
+      />
+      {/* 模板设置弹窗 */}
+      <TemplateSettingsModal
+        key={`template-${settingsDoc?.id || 'none'}`}
+        open={templateModalOpen}
+        doc={settingsDoc}
+        onCancel={handleCloseTemplateModal}
+      />
+      {/* 临时授权弹窗 */}
+      <TempPermissionModal
+        key={`temp-${settingsDoc?.id || 'none'}`}
+        open={tempPermModalOpen}
+        doc={settingsDoc}
+        form={tempPermissionForm}
+        members={members}
+        onCancel={handleCloseTempPermModal}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import useGroupStore from '@/store/useGroupStore'
 import { GroupFiles } from './GroupFiles'
 import { GroupMembers } from './GroupMembers'
+import TemplateCenter from '../../TemplateCenter'
 
 interface GroupDetailProps {
   groupId: number
@@ -21,7 +22,7 @@ export function GroupDetail({ groupId, onBack }: GroupDetailProps) {
             icon={<ArrowLeftOutlined />}
             onClick={()=>{onBack();clearPathFolder()}}
           >
-            返回
+            返回首页
           </Button>
           <div>  
             <h2 className="text-xl font-bold mb-1 text-right">
@@ -41,6 +42,10 @@ export function GroupDetail({ groupId, onBack }: GroupDetailProps) {
               key: 'files',
               label: '组内文件',
               children: <GroupFiles groupId={groupId} />,
+            },{
+              key: 'template',
+              label: '文件模板',
+              children: <TemplateCenter />
             },
             {
               key: 'members',

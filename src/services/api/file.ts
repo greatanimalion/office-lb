@@ -106,5 +106,20 @@ export const fileAPI = {
   */
   deleteDocumentVersion: (id: number) =>
     request.delete<{ success: boolean, message: string }>(`/api/documents/${id}/version`),
+  /**
+   * 更新文档信息（标题、权限）
+  */
+  updateDocument: (id: number, data: { title?: string; permission?: number }) =>
+    request.put<{ success: boolean; message?: string }>(`/api/documents/${id}`, data),
+  /**
+   * 锁定文档
+  */
+  lockDocument: async (id: number,locked: boolean) =>{ 
+    if(locked){
+      return request.post<{ success: boolean, message?: string }>(`/api/documents/${id}/unlock`)
+    }else{
+      return request.post<{ success: boolean; message?: string }>(`/api/documents/${id}/lock`)
+    }
+  }
 }
 

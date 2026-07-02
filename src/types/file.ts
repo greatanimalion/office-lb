@@ -9,8 +9,9 @@ export interface MyDocument  {
   owner_type: OwnerType
   fileSize: number
   version_number: number
+  permission: number
   status: string
-  locked: boolean
+  locked: 0 | 1
   locked_by?: number
   created_at: string
   updated_at: string
