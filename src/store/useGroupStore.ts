@@ -16,7 +16,7 @@ interface GroupState {
   currentFolder: Folder | null
   getFolders: () => Promise<void>
   fetchGroups: () => Promise<void>
-  fetchMembers: (groupId: number) => Promise<void>
+  fetchMembers: (groupId: number) => Promise<GroupMember[]>
   createGroup: (data: { name: string; description?: string }) => Promise<Group | null>
   deleteGroup: (id: number) => Promise<boolean>
   refreshDocuments: () => Promise<void>
@@ -55,8 +55,10 @@ const useGroupStore = create<GroupState>((set, get) => ({
     try {
       const response = await groupAPI.getMembers(groupId)
       set({ members: response.data })
+      return response.data || []
     } catch {
       set({ members: [] })
+      return []
     }
   },
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button, Space, Empty, Spin, message, Modal, Form, Input, Checkbox, Transfer, Breadcrumb, Popover, Popconfirm, Tag } from 'antd'
 import {
   FolderOutlined,
@@ -32,6 +32,7 @@ import { getPermissionIcon } from '@/components/common/permissionIcon'
 import BasicSettingsModal from './BasicSettingsModal'
 import TemplateSettingsModal from './TemplateSettingsModal'
 import TempPermissionModal from './TempPermissionModal'
+import useUserStore from '@/store/useUserStore'
 const permissionOptions: { value: PermissionType; label: string }[] = [
   { value: PermissionType.VIEW, label: '查看' },
   { value: PermissionType.DOWNLOAD, label: '下载' },
@@ -49,9 +50,17 @@ interface GroupFilesProps {
 
 
 export function GroupFiles({ groupId }: GroupFilesProps) {
-  const { getFolders, folders, documents, refreshDocuments, pushPath, popPath, pathFolder, currentFolder, setCurrentFolder } = useGroupStore()
+  const { getFolders,members, folders, documents, refreshDocuments,fetchMembers, pushPath, popPath, pathFolder, currentFolder, setCurrentFolder } = useGroupStore()
   const { fetchODocuments, ODocuments } = useFileStore()
+  const mySelf = useUserStore((state) => state.user)
   const [loading, setLoading] = useState(true)
+  useEffect(() => {
+     fetchMembers(groupId) 
+  }, [groupId])
+  const myGropuRole= useMemo(() => {
+
+     return members.find((m) => m.userId === mySelf.id)?.role
+  }, [members, mySelf.id])
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
   const [selectedDocIds, setSelectedDocIds] = useState<number[]>([])
@@ -67,8 +76,6 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
   const [tempPermModalOpen, setTempPermModalOpen] = useState(false)
   const [settingsDoc, setSettingsDoc] = useState<MyDocument | null>(null)
   const [tempPermissionForm] = Form.useForm()
-  const [members, setMembers] = useState<{ id: number; username: string }[]>([])
-
   const handleOpenEditModal = (folder: Folder) => {
     setEditingFolder(folder)
     setIsEditing(true)
@@ -182,14 +189,6 @@ export function GroupFiles({ groupId }: GroupFilesProps) {
 
   const openTempPermModal = async (doc: MyDocument) => {
     setSettingsDoc(doc)
-    try {
-      const res = await groupAPI.getMembers(groupId)
-      if (Array.isArray(res.data)) {
-        setMembers(res.data.map((m: any) => ({ id: m.userId, username: m.username })))
-      }
-    } catch {
-      setMembers([])
-    }
     tempPermissionForm.resetFields()
     setTempPermModalOpen(true)
     setBasicModalOpen(false)

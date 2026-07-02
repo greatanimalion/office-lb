@@ -1,5 +1,10 @@
 import type { User } from './user'
 
+export enum GroupRole {
+  Owner = 'owner',
+  Admin = 'admin',
+  Member = 'member',
+}
 export interface Group {
   id: number
   name: string
@@ -19,6 +24,6 @@ export interface GroupMember {
   username: string
   email: string
   avatar?: string
-  role: 'owner' | 'admin' | 'member'
+  role: GroupRole
   createdAt: string
 }

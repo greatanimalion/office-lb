@@ -119,7 +119,8 @@ export function GroupMembers({ groupId }: GroupMembersProps) {
       render: (text: string, record: GroupMember) => (
         <div className="flex items-center gap-3">
           <Avatar
-            src={record.avatar}
+            src={record.avatar? record.avatar : undefined}
+            alt={record.username}
             icon={<UserOutlined />}
             className="bg-blue-500"
           />

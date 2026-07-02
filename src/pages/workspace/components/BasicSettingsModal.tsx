@@ -37,6 +37,7 @@ export function BasicSettingsModal({ open, doc, onCancel, onSaved, defaultPermis
   }, [doc])
   const handleSave = async () => {
     const values = await form.validateFields()
+    console.log(values)
     if (!doc||!values) return 
     try {
       await fileAPI.updateDocument(doc!.id, {
@@ -68,8 +69,9 @@ export function BasicSettingsModal({ open, doc, onCancel, onSaved, defaultPermis
             name="title"
             label="文件名称"
             rules={[{ required: true, message: '请输入文件名称' }]}
+            initialValue={doc?.title.replace(fileExt, '') || ''}
           >
-            <Input placeholder="请输入文件名称" defaultValue={doc?.title.replace(fileExt, '') || ''} suffix={<span >{fileExt}</span>} />
+            <Input placeholder="请输入文件名称" suffix={<span>{fileExt}</span>} />
           </Form.Item>
           <Form.Item
             name="permissions"
